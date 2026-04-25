@@ -1,7 +1,20 @@
-diff -urN '--exclude=.git' /tmp/w2/assets/css/components/menu.css ./assets/css/components/menu.css
+diff -urN '--exclude=.git' /tmp/w2/assets/css/components/menu.css /tmp/w2-serve/assets/css/components/menu.css
 --- /tmp/w2/assets/css/components/menu.css	2026-04-25 17:50:16.857271076 +0000
-+++ ./assets/css/components/menu.css	2026-04-25 17:58:40.904439606 +0000
-@@ -173,6 +173,9 @@
++++ /tmp/w2-serve/assets/css/components/menu.css	2026-04-25 22:00:38.879113152 +0000
+@@ -25,7 +25,11 @@
+   inset: 0;
+   background: var(--c-bg);
+   color: var(--c-text);
+-  z-index: var(--z-menu);
++  /* Sin z-index propio: .menu vive dentro de .nav (z=1000), por lo que ya
++     queda encima del contenido principal. Dentro del stacking context del
++     nav, los .nav-toggle/.nav-logo/.nav-right (con z-index:1 explícito en
++     nav.css) se pintan encima del menu — así la X y el logo siguen visibles
++     cuando el drawer está abierto. */
+   display: flex;
+   flex-direction: column;
+   /* Reserva el espacio del nav (que vive con z-index mayor encima). */
+@@ -173,6 +177,9 @@
      position: static;
      inset: auto;
      background: none;
@@ -11,9 +24,9 @@ diff -urN '--exclude=.git' /tmp/w2/assets/css/components/menu.css ./assets/css/c
      z-index: auto;
      display: contents;        /* el <ul> sube al grid del nav-inner */
      padding: 0;
-diff -urN '--exclude=.git' /tmp/w2/assets/css/components/nav.css ./assets/css/components/nav.css
+diff -urN '--exclude=.git' /tmp/w2/assets/css/components/nav.css /tmp/w2-serve/assets/css/components/nav.css
 --- /tmp/w2/assets/css/components/nav.css	2026-04-25 17:50:16.857271076 +0000
-+++ ./assets/css/components/nav.css	2026-04-25 18:00:08.828444832 +0000
++++ /tmp/w2-serve/assets/css/components/nav.css	2026-04-25 22:00:53.815113533 +0000
 @@ -36,12 +36,14 @@
    background: var(--c-bg);
    color: var(--c-text);
@@ -51,3 +64,29 @@ diff -urN '--exclude=.git' /tmp/w2/assets/css/components/nav.css ./assets/css/co
  }
  
  
+@@ -105,6 +108,9 @@
+   width: 40px; height: 40px;
+   color: inherit;
+   -webkit-tap-highlight-color: transparent;
++  /* z-index:1 dentro del stacking context del nav → queda por encima
++     del .menu (drawer mobile) cuando este se abre. Ver nota en menu.css. */
++  position: relative; z-index: 1;
+ }
+ .nav-toggle span {
+   display: block;
+@@ -126,6 +132,7 @@
+   justify-self: center;
+   display: inline-flex; align-items: center;
+   color: inherit;
++  position: relative; z-index: 1;     /* encima del .menu — ver nota en .nav-toggle */
+ }
+ .nav-logo svg { height: 28px; width: auto; }
+ 
+@@ -138,6 +145,7 @@
+   align-items: center;
+   gap: var(--sp-3);
+   color: inherit;
++  position: relative; z-index: 1;     /* encima del .menu — ver nota en .nav-toggle */
+ }
+ 
+ .nav-whatsapp {

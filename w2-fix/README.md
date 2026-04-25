@@ -20,6 +20,16 @@ Más detalles en `menu-fix.patch` en la raíz del repo.
    su `inset: 0` se estaba calculando contra los 64 px del nav, no contra el viewport.
    Fix: animar el auto-hide con `top` en lugar de `transform`. Sin transform, sin trampa.
 
+3. **Mobile**: con el drawer abierto la X y el logo desaparecían (blanco sobre blanco aparente).
+   Causa real: NO era un problema de color. `.menu` tenía `z-index: var(--z-menu)` (= 900) y
+   está *dentro* de `.nav` (z=1000), por lo que dentro del stacking context del nav el menu
+   pintaba encima de la X / logo / WhatsApp (que eran `static`, z=auto). El comentario
+   original "el nav vive con z-index mayor encima" solo es cierto si nav y menu son
+   hermanos — al estar anidados, el z-index local del menu gana a sus tíos estáticos.
+   Fix: quitado el z-index de `.menu` (no lo necesita: queda encima del page por estar dentro
+   del nav) + `position: relative; z-index: 1` en `.nav-toggle`, `.nav-logo`, `.nav-right`
+   para que se pinten encima del drawer dentro del stacking context del nav.
+
 ## Cómo aplicar
 
 Desde la raíz de tu repo `w2`:

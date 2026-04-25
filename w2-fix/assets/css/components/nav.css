@@ -108,6 +108,9 @@
   width: 40px; height: 40px;
   color: inherit;
   -webkit-tap-highlight-color: transparent;
+  /* z-index:1 dentro del stacking context del nav → queda por encima
+     del .menu (drawer mobile) cuando este se abre. Ver nota en menu.css. */
+  position: relative; z-index: 1;
 }
 .nav-toggle span {
   display: block;
@@ -129,6 +132,7 @@
   justify-self: center;
   display: inline-flex; align-items: center;
   color: inherit;
+  position: relative; z-index: 1;     /* encima del .menu — ver nota en .nav-toggle */
 }
 .nav-logo svg { height: 28px; width: auto; }
 
@@ -141,6 +145,7 @@
   align-items: center;
   gap: var(--sp-3);
   color: inherit;
+  position: relative; z-index: 1;     /* encima del .menu — ver nota en .nav-toggle */
 }
 
 .nav-whatsapp {

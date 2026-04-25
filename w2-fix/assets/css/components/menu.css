@@ -25,7 +25,11 @@
   inset: 0;
   background: var(--c-bg);
   color: var(--c-text);
-  z-index: var(--z-menu);
+  /* Sin z-index propio: .menu vive dentro de .nav (z=1000), por lo que ya
+     queda encima del contenido principal. Dentro del stacking context del
+     nav, los .nav-toggle/.nav-logo/.nav-right (con z-index:1 explícito en
+     nav.css) se pintan encima del menu — así la X y el logo siguen visibles
+     cuando el drawer está abierto. */
   display: flex;
   flex-direction: column;
   /* Reserva el espacio del nav (que vive con z-index mayor encima). */
