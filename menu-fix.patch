@@ -90,3 +90,61 @@ diff -urN '--exclude=.git' /tmp/w2/assets/css/components/nav.css /tmp/w2-serve/a
  }
  
  .nav-whatsapp {
+diff -urN '--exclude=.git' /tmp/w2/assets/css/tokens.css /tmp/w2-serve/assets/css/tokens.css
+--- /tmp/w2/assets/css/tokens.css	2026-04-25 17:50:16.859485837 +0000
++++ /tmp/w2-serve/assets/css/tokens.css	2026-04-25 22:19:15.451393326 +0000
+@@ -8,7 +8,7 @@
+ 
+ :root{
+   /* Versión (mostrada en el badge de debug y en el ?v=X.Y.Z de los assets) */
+-  --version: "v0.4.5";
++  --version: "v0.4.6";
+ 
+   /* Colores base */
+   --c-bg:        #ffffff;
+diff -urN '--exclude=.git' /tmp/w2/index.html /tmp/w2-serve/index.html
+--- /tmp/w2/index.html	2026-04-25 17:50:16.860867485 +0000
++++ /tmp/w2-serve/index.html	2026-04-25 22:19:15.453993796 +0000
+@@ -10,18 +10,18 @@
+   <!-- CSS modular (se concatenará en producción).
+        NOTA: actualizar el ?v=X.Y.Z cuando se cambia --version en tokens.css
+        para invalidar caches de navegador y CDN de GitHub Pages. -->
+-  <link rel="stylesheet" href="assets/css/tokens.css?v=0.4.5">
+-  <link rel="stylesheet" href="assets/css/reset.css?v=0.4.5">
+-  <link rel="stylesheet" href="assets/css/base.css?v=0.4.5">
+-  <link rel="stylesheet" href="assets/css/layout/container.css?v=0.4.5">
+-  <link rel="stylesheet" href="assets/css/layout/grid.css?v=0.4.5">
+-  <link rel="stylesheet" href="assets/css/layout/split.css?v=0.4.5">
+-  <link rel="stylesheet" href="assets/css/components/nav.css?v=0.4.5">
+-  <link rel="stylesheet" href="assets/css/components/menu.css?v=0.4.5">
+-  <link rel="stylesheet" href="assets/css/components/button.css?v=0.4.5">
+-  <link rel="stylesheet" href="assets/css/components/hero.css?v=0.4.5">
+-  <link rel="stylesheet" href="assets/css/components/card.css?v=0.4.5">
+-  <link rel="stylesheet" href="assets/css/debug.css?v=0.4.5">
++  <link rel="stylesheet" href="assets/css/tokens.css?v=0.4.6">
++  <link rel="stylesheet" href="assets/css/reset.css?v=0.4.6">
++  <link rel="stylesheet" href="assets/css/base.css?v=0.4.6">
++  <link rel="stylesheet" href="assets/css/layout/container.css?v=0.4.6">
++  <link rel="stylesheet" href="assets/css/layout/grid.css?v=0.4.6">
++  <link rel="stylesheet" href="assets/css/layout/split.css?v=0.4.6">
++  <link rel="stylesheet" href="assets/css/components/nav.css?v=0.4.6">
++  <link rel="stylesheet" href="assets/css/components/menu.css?v=0.4.6">
++  <link rel="stylesheet" href="assets/css/components/button.css?v=0.4.6">
++  <link rel="stylesheet" href="assets/css/components/hero.css?v=0.4.6">
++  <link rel="stylesheet" href="assets/css/components/card.css?v=0.4.6">
++  <link rel="stylesheet" href="assets/css/debug.css?v=0.4.6">
+ </head>
+ 
+ <!-- class="debug" activa los bordes/badges de desarrollo. Quitar para producción. -->
+@@ -290,8 +290,8 @@
+ 
+ </main>
+ 
+-<script src="assets/js/nav-scroll.js?v=0.4.5" defer></script>
+-<script src="assets/js/menu.js?v=0.4.5" defer></script>
+-<script src="assets/js/hero.js?v=0.4.5" defer></script>
++<script src="assets/js/nav-scroll.js?v=0.4.6" defer></script>
++<script src="assets/js/menu.js?v=0.4.6" defer></script>
++<script src="assets/js/hero.js?v=0.4.6" defer></script>
+ </body>
+ </html>

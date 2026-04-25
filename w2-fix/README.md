@@ -1,9 +1,11 @@
 # Fix para duecaz/w2 — menú: contraste desktop + drawer mobile
 
-Dos archivos modificados (todos los demás siguen igual):
+Cuatro archivos modificados:
 
 - `assets/css/components/nav.css`
 - `assets/css/components/menu.css`
+- `assets/css/tokens.css`     ← versión bumpeada a v0.4.6
+- `index.html`                ← cache busters `?v=0.4.6` (15 ocurrencias)
 
 Más detalles en `menu-fix.patch` en la raíz del repo.
 
@@ -32,19 +34,22 @@ Más detalles en `menu-fix.patch` en la raíz del repo.
 
 ## Cómo aplicar
 
-Desde la raíz de tu repo `w2`:
+Desde la raíz de tu repo `w2` (PowerShell — usa `curl.exe` para evitar el alias):
 
-```bash
-# Reemplaza solo los dos archivos (preserva el resto)
-curl -fsSL https://raw.githubusercontent.com/ssmael14/nuevo/claude/extract-website-styles-NkVGx/w2-fix/assets/css/components/nav.css  -o assets/css/components/nav.css
-curl -fsSL https://raw.githubusercontent.com/ssmael14/nuevo/claude/extract-website-styles-NkVGx/w2-fix/assets/css/components/menu.css -o assets/css/components/menu.css
+```powershell
+$base = "https://raw.githubusercontent.com/ssmael14/nuevo/claude/extract-website-styles-NkVGx/w2-fix"
+curl.exe -fsSL "$base/assets/css/components/nav.css"   -o assets/css/components/nav.css
+curl.exe -fsSL "$base/assets/css/components/menu.css"  -o assets/css/components/menu.css
+curl.exe -fsSL "$base/assets/css/tokens.css"           -o assets/css/tokens.css
+curl.exe -fsSL "$base/index.html"                       -o index.html
 ```
 
-O alternativamente, baja el patch unificado:
+O equivalente con bash/zsh:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/ssmael14/nuevo/claude/extract-website-styles-NkVGx/menu-fix.patch | git apply -p2 -
-# (-p2 quita los prefijos /tmp/w2 y . del diff que generé en mi sandbox)
+base=https://raw.githubusercontent.com/ssmael14/nuevo/claude/extract-website-styles-NkVGx/w2-fix
+curl -fsSL "$base/assets/css/components/nav.css"   -o assets/css/components/nav.css
+curl -fsSL "$base/assets/css/components/menu.css"  -o assets/css/components/menu.css
+curl -fsSL "$base/assets/css/tokens.css"           -o assets/css/tokens.css
+curl -fsSL "$base/index.html"                       -o index.html
 ```
-
-Si `git apply` se queja de los prefijos, abre el `.patch` y ajústalo a mano — son ~50 líneas.
