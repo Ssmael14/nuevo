@@ -4,18 +4,25 @@ Pequeña app para extraer la **paleta de colores, tipografías, tamaños, sombra
 
 Funciona porque carga la página con un **Chromium real** vía Playwright, así que el servidor recibe una petición indistinguible de un navegador normal.
 
+## Tres formas de usarlo
+
+1. **Bookmarklet** (la más simple, sin instalar nada). Genera y abre `bookmarklet.html`, arrastra el botón a la barra de marcadores, abre cualquier web y haz clic en el marcador → descarga un `report.html`.
+2. **CLI** Node + Playwright (la más completa, ideal para automatizar).
+3. **Mini app web** (formulario en `localhost:3000`).
+
 ## Uso rápido
 
 ```bash
+# Bookmarklet (no necesita instalar Playwright, sólo Node para generarlo)
+node scripts/build-bookmarklet.js
+# abre bookmarklet.html, arrastra el botón a tus marcadores, listo
+
+# CLI / app web (sí necesita Playwright)
 npm install
 npx playwright install chromium   # solo si no tienes Chromium ya descargado
 
-# Modo CLI (escribe output/report.html, output/styles.json, output/screenshot.png)
-npm run extract -- https://www.insta360.com/es/
-
-# Modo app web (formulario con campo URL)
-npm run serve
-# abre http://localhost:3000
+npm run extract -- https://www.insta360.com/es/   # genera output/report.html
+npm run serve                                      # http://localhost:3000
 ```
 
 Sin argumentos, `npm run extract` usa `https://www.insta360.com/es/` como URL por defecto.
