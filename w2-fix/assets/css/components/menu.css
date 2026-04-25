@@ -1,0 +1,221 @@
+/* ==========================================================================
+   MENU.CSS — full-screen overlay (mobile) + horizontal (desktop ≥960px)
+   --------------------------------------------------------------------------
+   · Mobile: cubre toda la pantalla (inset: 0) con padding-top = nav-h. El
+     nav queda visible ENCIMA del menú (z-index mayor) para que el botón X,
+     el logo y el WhatsApp sigan accesibles.
+   · Submenús accordion: <button aria-expanded> con chevron que rota.
+   · Footer del menú con redes sociales + CTA grande.
+   · Mantiene la barra vertical amarilla (--c-accent) a la izquierda en
+     hover/active — detalle visual heredado de la versión anterior.
+
+   Secciones (Ctrl+F):
+     1) MENU CONTAINER (mobile full-screen + visibility)
+     2) ITEMS (link y botón de submenu, barra amarilla)
+     3) SUBMENÚS (accordion + chevron)
+     4) FOOTER del menú (redes + CTA)
+     5) DESKTOP overrides (≥ 960px)
+   ========================================================================== */
+
+
+/* === 1) MENU CONTAINER ===================================================== */
+
+.menu {
+  position: fixed;
+  inset: 0;
+  background: var(--c-bg);
+  color: var(--c-text);
+  z-index: var(--z-menu);
+  display: flex;
+  flex-direction: column;
+  /* Reserva el espacio del nav (que vive con z-index mayor encima). */
+  padding: var(--nav-h) 0 0;
+  /* Visibilidad: usa visibility para evitar que reciba clicks oculto. */
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .25s ease, visibility 0s linear .25s;
+}
+.menu.is-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity .25s ease, visibility 0s;
+}
+
+.menu-list {
+  flex: 1;
+  overflow-y: auto;
+  list-style: none;
+  padding: var(--sp-3) 0;
+  margin: 0;
+}
+
+
+/* === 2) ITEMS — link y botón submenu (mismo aspecto base) ================ */
+
+.menu-link {
+  position: relative;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-5);
+  font: inherit;
+  font-size: 17px;
+  font-weight: var(--fw-medium);
+  color: inherit;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background var(--t-fast);
+}
+.menu-link:hover { background: rgba(0,0,0,.03); }
+
+/* Barra vertical amarilla (mobile) — el detalle visual que conservamos. */
+.menu-link::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 25%; bottom: 25%;
+  width: 4px;
+  background: var(--c-accent);
+  opacity: 0;
+  transition: opacity var(--t-fast);
+}
+.menu-link:hover::before,
+.menu-link[aria-current="page"]::before,
+.menu-link[aria-expanded="true"]::before { opacity: 1; }
+
+.menu-link__icon {
+  width: 18px; height: 18px;
+  fill: currentColor;
+  flex-shrink: 0;
+}
+
+
+/* === 3) SUBMENÚS — accordion =============================================== */
+
+.menu-chevron {
+  width: 14px; height: 14px;
+  fill: currentColor;
+  opacity: .55;
+  transition: transform var(--t-base);
+  flex-shrink: 0;
+}
+/* Botón de submenu expandido → chevron rota 180° */
+[aria-expanded="true"] > .menu-chevron { transform: rotate(180deg); }
+
+/* Wrapper del submenu. Estructura HTML válida:
+     <div class="menu-sublist"><ul>...</ul></div>
+   El truco grid-template-rows 0fr→1fr anima la altura sin medir el DOM.
+   Soporte: Chrome 117+, FF 121+, Safari 17+. */
+.menu-sublist {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--t-base);
+}
+.menu-sublist > ul {
+  overflow: hidden;
+  min-height: 0;
+  list-style: none;
+  margin: 0; padding: 0;
+}
+[aria-expanded="true"] + .menu-sublist { grid-template-rows: 1fr; }
+
+.menu-sublist a {
+  display: block;
+  padding: var(--sp-3) var(--sp-5) var(--sp-3) calc(var(--sp-5) + var(--sp-6));
+  font-size: 15px;
+  font-weight: var(--fw-regular);
+  color: var(--c-text-soft);
+  transition: color var(--t-fast);
+}
+.menu-sublist a:hover { color: var(--c-text); }
+
+
+/* === 4) FOOTER del menú (mobile only) ===================================== */
+
+.menu-footer {
+  border-top: 1px solid var(--c-border);
+  padding: var(--sp-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.menu-social {
+  display: flex;
+  gap: var(--sp-2);
+  list-style: none;
+  margin: 0; padding: 0;
+}
+.menu-social a {
+  width: 40px; height: 40px;
+  display: inline-flex;
+  align-items: center; justify-content: center;
+  border-radius: 50%;
+  color: inherit;
+  transition: background var(--t-fast);
+}
+.menu-social a:hover { background: rgba(0,0,0,.06); }
+.menu-social svg { width: 20px; height: 20px; fill: currentColor; }
+
+.menu-cta { width: 100%; justify-content: center; }
+
+
+/* === 5) DESKTOP overrides (>= 960px) ====================================== */
+
+@media (min-width: 960px) {
+  .menu {
+    position: static;
+    inset: auto;
+    background: none;
+    color: inherit;           /* sin esto el .menu mantiene var(--c-text) (negro)
+                                 y los .menu-link, que usan color:inherit, lo heredan,
+                                 quedando negros sobre el hero oscuro */
+    z-index: auto;
+    display: contents;        /* el <ul> sube al grid del nav-inner */
+    padding: 0;
+    opacity: 1; visibility: visible; pointer-events: auto;
+    transition: none;
+  }
+
+  .menu-list {
+    justify-self: start;
+    display: flex;            /* ← clave: sin esto, flex-direction se ignora */
+    flex-direction: row;
+    align-items: center;
+    gap: var(--sp-8);
+    overflow: visible;
+    padding: 0;
+  }
+
+  .menu-link {
+    padding: var(--sp-2) 0;
+    font-size: 14px;
+    width: auto;
+    background: transparent;
+  }
+  .menu-link:hover { background: transparent; }
+
+  /* Sin barra vertical: en desktop usamos underline */
+  .menu-link::before {
+    left: 0; right: 0; top: auto; bottom: -6px;
+    width: auto; height: 2px;
+    opacity: 1;
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform var(--t-base);
+  }
+  .menu-link:hover::before,
+  .menu-link[aria-current="page"]::before { transform: scaleX(1); }
+
+  /* Submenús y footer: ocultos en desktop por ahora.
+     TODO: convertir submenús en dropdown al hover (siguiente iteración). */
+  .menu-link[aria-expanded] + .menu-sublist,
+  .menu-chevron,
+  .menu-footer { display: none; }
+}

@@ -1,0 +1,53 @@
+diff -urN '--exclude=.git' /tmp/w2/assets/css/components/menu.css ./assets/css/components/menu.css
+--- /tmp/w2/assets/css/components/menu.css	2026-04-25 17:50:16.857271076 +0000
++++ ./assets/css/components/menu.css	2026-04-25 17:58:40.904439606 +0000
+@@ -173,6 +173,9 @@
+     position: static;
+     inset: auto;
+     background: none;
++    color: inherit;           /* sin esto el .menu mantiene var(--c-text) (negro)
++                                 y los .menu-link, que usan color:inherit, lo heredan,
++                                 quedando negros sobre el hero oscuro */
+     z-index: auto;
+     display: contents;        /* el <ul> sube al grid del nav-inner */
+     padding: 0;
+diff -urN '--exclude=.git' /tmp/w2/assets/css/components/nav.css ./assets/css/components/nav.css
+--- /tmp/w2/assets/css/components/nav.css	2026-04-25 17:50:16.857271076 +0000
++++ ./assets/css/components/nav.css	2026-04-25 18:00:08.828444832 +0000
+@@ -36,12 +36,14 @@
+   background: var(--c-bg);
+   color: var(--c-text);
+   box-shadow: var(--shadow-nav);
+-  /* Animamos color/bg/shadow Y transform (auto-hide). */
++  /* Auto-hide se anima con `top` (no con transform). transform crearía un
++     containing block para descendientes position:fixed → atraparía a .menu
++     dentro del nav. Para una barra de 64px el coste de animar `top` es
++     imperceptible. */
+   transition: background var(--t-base),
+               color      var(--t-base),
+               box-shadow var(--t-base),
+-              transform  var(--t-base);
+-  will-change: transform;
++              top        var(--t-base);
+ }
+ 
+ /* Sobre el hero: transparente + texto claro. */
+@@ -74,14 +76,15 @@
+ 
+ /* === 2) AUTO-HIDE =========================================================== */
+ 
+-/* Scroll ↓ oculta el nav. Estos overrides aseguran que esté visible cuando: */
+-.nav.is-hidden { transform: translateY(-100%); }
++/* Scroll ↓ oculta el nav subiéndolo fuera de pantalla.
++   Usamos `top` en vez de `transform` a propósito — ver nota en .nav. */
++.nav.is-hidden { top: calc(-1 * var(--nav-h)); }
+ 
+ /* ...el menú está abierto (no podemos perder el contexto). */
+ .nav.is-menu-open,
+ /* ...o algo dentro del nav tiene foco por teclado (Tab al logo, etc). */
+ .nav:focus-within {
+-  transform: translateY(0);
++  top: 0;
+ }
+ 
+ 
