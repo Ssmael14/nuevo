@@ -1,0 +1,21 @@
+{
+  "name": "style-extractor",
+  "version": "0.1.0",
+  "description": "Extrae paleta de colores, tipografías y tokens CSS de cualquier web (incluso las que bloquean fetch/curl).",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "style-extract": "./src/cli.js"
+  },
+  "scripts": {
+    "extract": "node src/cli.js",
+    "serve": "node src/server.js"
+  },
+  "dependencies": {
+    "playwright": "^1.56.1",
+    "express": "^4.21.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
