@@ -54,13 +54,14 @@
   }
 
   /* Underline animado al hover/active.
-     scale-X 0→1 da una entrada limpia desde la izquierda. */
+     scale-X 0→1 da una entrada limpia desde la izquierda. Color de marca
+     (amarillo) — coherente con el accent del drawer mobile. */
   .menu-bar-link::before {
     content: "";
     position: absolute;
     left: 0; right: 0; bottom: -6px;
     height: 2px;
-    background: currentColor;
+    background: var(--c-accent);
     transform: scaleX(0);
     transform-origin: left center;
     transition: transform var(--t-base);

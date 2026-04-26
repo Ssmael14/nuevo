@@ -109,8 +109,8 @@ diff -urN '--exclude=.git' /tmp/w2/assets/css/components/hero.css /tmp/w2-serve/
 +}
 diff -urN '--exclude=.git' /tmp/w2/assets/css/components/menu-bar.css /tmp/w2-serve/assets/css/components/menu-bar.css
 --- /tmp/w2/assets/css/components/menu-bar.css	1970-01-01 00:00:00.000000000 +0000
-+++ /tmp/w2-serve/assets/css/components/menu-bar.css	2026-04-26 00:05:19.310983815 +0000
-@@ -0,0 +1,81 @@
++++ /tmp/w2-serve/assets/css/components/menu-bar.css	2026-04-26 13:57:43.043542357 +0000
+@@ -0,0 +1,82 @@
 +/* ==========================================================================
 +   MENU-BAR.CSS — barra horizontal de navegación (DESKTOP ≥960px)
 +   --------------------------------------------------------------------------
@@ -167,13 +167,14 @@ diff -urN '--exclude=.git' /tmp/w2/assets/css/components/menu-bar.css /tmp/w2-se
 +  }
 +
 +  /* Underline animado al hover/active.
-+     scale-X 0→1 da una entrada limpia desde la izquierda. */
++     scale-X 0→1 da una entrada limpia desde la izquierda. Color de marca
++     (amarillo) — coherente con el accent del drawer mobile. */
 +  .menu-bar-link::before {
 +    content: "";
 +    position: absolute;
 +    left: 0; right: 0; bottom: -6px;
 +    height: 2px;
-+    background: currentColor;
++    background: var(--c-accent);
 +    transform: scaleX(0);
 +    transform-origin: left center;
 +    transition: transform var(--t-base);
@@ -194,8 +195,8 @@ diff -urN '--exclude=.git' /tmp/w2/assets/css/components/menu-bar.css /tmp/w2-se
 +}
 diff -urN '--exclude=.git' /tmp/w2/assets/css/components/menu-drawer.css /tmp/w2-serve/assets/css/components/menu-drawer.css
 --- /tmp/w2/assets/css/components/menu-drawer.css	1970-01-01 00:00:00.000000000 +0000
-+++ /tmp/w2-serve/assets/css/components/menu-drawer.css	2026-04-26 00:05:19.327798868 +0000
-@@ -0,0 +1,173 @@
++++ /tmp/w2-serve/assets/css/components/menu-drawer.css	2026-04-26 13:57:51.727542873 +0000
+@@ -0,0 +1,175 @@
 +/* ==========================================================================
 +   MENU-DRAWER.CSS — overlay fullscreen mobile (<960px)
 +   --------------------------------------------------------------------------
@@ -278,12 +279,14 @@ diff -urN '--exclude=.git' /tmp/w2/assets/css/components/menu-drawer.css /tmp/w2
 +}
 +.menu-drawer-link:hover { background: rgba(0,0,0,.03); }
 +
-+/* Barra vertical amarilla a la izquierda en hover/active/expanded. */
++/* Barra vertical amarilla a la izquierda en hover/active/expanded.
++   Full-height + 5px para que el accent sea claramente visible al primer
++   vistazo (antes era 4px y solo el 50% central — pasaba desapercibido). */
 +.menu-drawer-link::before {
 +  content: "";
 +  position: absolute;
-+  left: 0; top: 25%; bottom: 25%;
-+  width: 4px;
++  left: 0; top: 0; bottom: 0;
++  width: 5px;
 +  background: var(--c-accent);
 +  opacity: 0;
 +  transition: opacity var(--t-fast);
@@ -905,7 +908,7 @@ diff -urN '--exclude=.git' /tmp/w2/assets/css/reset.css /tmp/w2-serve/assets/css
 +}
 diff -urN '--exclude=.git' /tmp/w2/assets/css/tokens.css /tmp/w2-serve/assets/css/tokens.css
 --- /tmp/w2/assets/css/tokens.css	2026-04-25 23:54:19.348872024 +0000
-+++ /tmp/w2-serve/assets/css/tokens.css	2026-04-26 00:05:27.808258968 +0000
++++ /tmp/w2-serve/assets/css/tokens.css	2026-04-26 13:57:57.135272290 +0000
 @@ -6,9 +6,11 @@
       xl: 1280px  (desktop amplio)
     ========================================================================== */
@@ -915,7 +918,7 @@ diff -urN '--exclude=.git' /tmp/w2/assets/css/tokens.css /tmp/w2-serve/assets/cs
  :root{
    /* Versión (mostrada en el badge de debug y en el ?v=X.Y.Z de los assets) */
 -  --version: "v0.4.5";
-+  --version: "v0.5.1";
++  --version: "v0.5.2";
  
    /* Colores base */
    --c-bg:        #ffffff;
@@ -1153,7 +1156,7 @@ diff -urN '--exclude=.git' /tmp/w2/assets/js/menu.js /tmp/w2-serve/assets/js/men
 -})();
 diff -urN '--exclude=.git' /tmp/w2/index.html /tmp/w2-serve/index.html
 --- /tmp/w2/index.html	2026-04-25 23:54:19.349796319 +0000
-+++ /tmp/w2-serve/index.html	2026-04-26 00:05:47.434012843 +0000
++++ /tmp/w2-serve/index.html	2026-04-26 13:57:57.136802533 +0000
 @@ -7,30 +7,51 @@
    <meta name="theme-color" content="#0e1628">
    <title>EduBoard — dev</title>
@@ -1187,19 +1190,19 @@ diff -urN '--exclude=.git' /tmp/w2/index.html /tmp/w2-serve/index.html
 -  <link rel="stylesheet" href="assets/css/components/hero.css?v=0.4.5">
 -  <link rel="stylesheet" href="assets/css/components/card.css?v=0.4.5">
 -  <link rel="stylesheet" href="assets/css/debug.css?v=0.4.5">
-+  <link rel="stylesheet" href="assets/css/tokens.css?v=0.5.1">
-+  <link rel="stylesheet" href="assets/css/reset.css?v=0.5.1">
-+  <link rel="stylesheet" href="assets/css/base.css?v=0.5.1">
-+  <link rel="stylesheet" href="assets/css/layout/container.css?v=0.5.1">
-+  <link rel="stylesheet" href="assets/css/layout/grid.css?v=0.5.1">
-+  <link rel="stylesheet" href="assets/css/layout/split.css?v=0.5.1">
-+  <link rel="stylesheet" href="assets/css/components/nav.css?v=0.5.1">
-+  <link rel="stylesheet" href="assets/css/components/menu-bar.css?v=0.5.1">
-+  <link rel="stylesheet" href="assets/css/components/menu-drawer.css?v=0.5.1">
-+  <link rel="stylesheet" href="assets/css/components/button.css?v=0.5.1">
-+  <link rel="stylesheet" href="assets/css/components/hero.css?v=0.5.1">
-+  <link rel="stylesheet" href="assets/css/components/card.css?v=0.5.1">
-+  <link rel="stylesheet" href="assets/css/debug.css?v=0.5.1">
++  <link rel="stylesheet" href="assets/css/tokens.css?v=0.5.2">
++  <link rel="stylesheet" href="assets/css/reset.css?v=0.5.2">
++  <link rel="stylesheet" href="assets/css/base.css?v=0.5.2">
++  <link rel="stylesheet" href="assets/css/layout/container.css?v=0.5.2">
++  <link rel="stylesheet" href="assets/css/layout/grid.css?v=0.5.2">
++  <link rel="stylesheet" href="assets/css/layout/split.css?v=0.5.2">
++  <link rel="stylesheet" href="assets/css/components/nav.css?v=0.5.2">
++  <link rel="stylesheet" href="assets/css/components/menu-bar.css?v=0.5.2">
++  <link rel="stylesheet" href="assets/css/components/menu-drawer.css?v=0.5.2">
++  <link rel="stylesheet" href="assets/css/components/button.css?v=0.5.2">
++  <link rel="stylesheet" href="assets/css/components/hero.css?v=0.5.2">
++  <link rel="stylesheet" href="assets/css/components/card.css?v=0.5.2">
++  <link rel="stylesheet" href="assets/css/debug.css?v=0.5.2">
  </head>
  
  <!-- class="debug" activa los bordes/badges de desarrollo. Quitar para producción. -->
@@ -1405,8 +1408,8 @@ diff -urN '--exclude=.git' /tmp/w2/index.html /tmp/w2-serve/index.html
 -<script src="assets/js/nav-scroll.js?v=0.4.5" defer></script>
 -<script src="assets/js/menu.js?v=0.4.5" defer></script>
 -<script src="assets/js/hero.js?v=0.4.5" defer></script>
-+<script src="assets/js/nav-scroll.js?v=0.5.1" defer></script>
-+<script src="assets/js/menu-drawer.js?v=0.5.1" defer></script>
-+<script src="assets/js/hero.js?v=0.5.1" defer></script>
++<script src="assets/js/nav-scroll.js?v=0.5.2" defer></script>
++<script src="assets/js/menu-drawer.js?v=0.5.2" defer></script>
++<script src="assets/js/hero.js?v=0.5.2" defer></script>
  </body>
  </html>

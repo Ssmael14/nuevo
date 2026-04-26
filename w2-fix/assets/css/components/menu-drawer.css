@@ -80,12 +80,14 @@
 }
 .menu-drawer-link:hover { background: rgba(0,0,0,.03); }
 
-/* Barra vertical amarilla a la izquierda en hover/active/expanded. */
+/* Barra vertical amarilla a la izquierda en hover/active/expanded.
+   Full-height + 5px para que el accent sea claramente visible al primer
+   vistazo (antes era 4px y solo el 50% central — pasaba desapercibido). */
 .menu-drawer-link::before {
   content: "";
   position: absolute;
-  left: 0; top: 25%; bottom: 25%;
-  width: 4px;
+  left: 0; top: 0; bottom: 0;
+  width: 5px;
   background: var(--c-accent);
   opacity: 0;
   transition: opacity var(--t-fast);
