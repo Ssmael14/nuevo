@@ -1,10 +1,16 @@
 /* ==========================================================================
-   NAV-SCROLL.JS
-   Comportamiento del header en respuesta al scroll:
-     · is-scrolled  → nav sólido (texto oscuro, sombra). Se activa cuando
-                      el scroll pasa el final del hero (threshold dinámico).
-     · is-hidden    → nav oculto (translateY(-100%)). Se activa al scrollear
-                      hacia abajo y se quita al scrollear hacia arriba.
+   NAV-SCROLL.JS — orquesta el estado del .nav
+
+   Estados que aplica al .nav:
+     · is-scrolled   → nav sólido (texto oscuro, sombra). Se activa cuando
+                       el scroll pasa el final del hero (threshold dinámico).
+     · is-hidden     → nav oculto (translateY(-100%)). Se activa al scrollear
+                       hacia abajo y se quita al scrollear hacia arriba.
+     · is-menu-open  → drawer mobile abierto. Lo despacha menu-drawer.js como
+                       CustomEvent('drawer:open' / 'drawer:close'); aquí lo
+                       traducimos a clase del nav (acoplamiento centralizado
+                       en este archivo, no en el drawer).
+
    Pasivo, sin throttle (passive:true ya da 60fps en navegadores modernos).
 
    Secciones (usa Ctrl+F):
@@ -74,4 +80,8 @@
   update();
   window.addEventListener('scroll', update, { passive: true });
   window.addEventListener('resize', () => { measure(); update(); }, { passive: true });
+
+  // Drawer events (despachados por menu-drawer.js): traducimos a clase del nav.
+  document.addEventListener('drawer:open',  () => nav.classList.add('is-menu-open'));
+  document.addEventListener('drawer:close', () => nav.classList.remove('is-menu-open'));
 })();

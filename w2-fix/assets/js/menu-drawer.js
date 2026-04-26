@@ -7,8 +7,11 @@
    · Focus trap mientras está abierto.
    · Bloquea scroll del body con .no-scroll en <html>.
    · Aplica inert al <main>.
-   · Marca .is-menu-open en el .nav (override de .is-hidden y transparencia)
-     — único acoplamiento con nav, vía DOM. Si crece, mover a CustomEvent.
+   · NO toca el .nav directamente. Despacha CustomEvent('drawer:open' /
+     'drawer:close') en `document` y deja que otros módulos reaccionen
+     (nav-scroll.js → marca is-menu-open; futuro hero.js → pausar slideshow).
+     Esto desacopla el drawer de quien escucha y permite que cualquier
+     módulo se subscriba sin que menu-drawer.js lo conozca.
 
    Secciones (Ctrl+F):
      1) ELEMENTOS Y CONFIG
@@ -24,7 +27,6 @@
   const toggle = document.querySelector('.nav-toggle');
   const drawer = document.querySelector('.menu-drawer');
   const main   = document.querySelector('main');
-  const nav    = document.querySelector('.nav');
 
   if (!toggle || !drawer) return;
 
@@ -45,9 +47,9 @@
     toggle.classList.add('is-active');
     toggle.setAttribute('aria-expanded', 'true');
     drawer.classList.add('is-open');
-    nav?.classList.add('is-menu-open');
     document.documentElement.classList.add('no-scroll');
     if (main) main.setAttribute('inert', '');
+    document.dispatchEvent(new CustomEvent('drawer:open'));
     focusables()[0]?.focus();
   };
 
@@ -55,13 +57,13 @@
     toggle.classList.remove('is-active');
     toggle.setAttribute('aria-expanded', 'false');
     drawer.classList.remove('is-open');
-    nav?.classList.remove('is-menu-open');
     document.documentElement.classList.remove('no-scroll');
     if (main) main.removeAttribute('inert');
     // Colapsa submenús abiertos al cerrar el drawer
     drawer.querySelectorAll('[aria-expanded="true"]').forEach(b => {
       if (b !== toggle) b.setAttribute('aria-expanded', 'false');
     });
+    document.dispatchEvent(new CustomEvent('drawer:close'));
     toggle.focus();
   };
 

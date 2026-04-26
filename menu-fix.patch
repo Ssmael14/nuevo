@@ -908,7 +908,7 @@ diff -urN '--exclude=.git' /tmp/w2/assets/css/reset.css /tmp/w2-serve/assets/css
 +}
 diff -urN '--exclude=.git' /tmp/w2/assets/css/tokens.css /tmp/w2-serve/assets/css/tokens.css
 --- /tmp/w2/assets/css/tokens.css	2026-04-25 23:54:19.348872024 +0000
-+++ /tmp/w2-serve/assets/css/tokens.css	2026-04-26 13:57:57.135272290 +0000
++++ /tmp/w2-serve/assets/css/tokens.css	2026-04-26 15:15:29.606175748 +0000
 @@ -6,9 +6,11 @@
       xl: 1280px  (desktop amplio)
     ========================================================================== */
@@ -918,7 +918,7 @@ diff -urN '--exclude=.git' /tmp/w2/assets/css/tokens.css /tmp/w2-serve/assets/cs
  :root{
    /* Versión (mostrada en el badge de debug y en el ?v=X.Y.Z de los assets) */
 -  --version: "v0.4.5";
-+  --version: "v0.5.2";
++  --version: "v0.5.3";
  
    /* Colores base */
    --c-bg:        #ffffff;
@@ -928,10 +928,46 @@ diff -urN '--exclude=.git' /tmp/w2/assets/css/tokens.css /tmp/w2-serve/assets/cs
  }
 +
 +}
+diff -urN '--exclude=.git' /tmp/w2/assets/js/hero.js /tmp/w2-serve/assets/js/hero.js
+--- /tmp/w2/assets/js/hero.js	2026-04-25 23:54:19.348872024 +0000
++++ /tmp/w2-serve/assets/js/hero.js	2026-04-26 15:13:58.768259021 +0000
+@@ -38,7 +38,10 @@
+ 
+   const total = slides.length;
+   let current = 0;
+-  let paused  = matchMedia('(prefers-reduced-motion: reduce)').matches;
++  // Detección persistente: lo consultamos en cada gesto, no solo al cargar,
++  // por si el usuario cambia la preferencia del sistema en caliente.
++  const mqReduce = matchMedia('(prefers-reduced-motion: reduce)');
++  let paused  = mqReduce.matches;
+ 
+   if (totalEl) totalEl.textContent = String(total).padStart(2, '0');
+ 
+@@ -174,10 +177,16 @@
+     const slide = slides[current];
+ 
+     hero.classList.remove('is-dragging');
+-    // Pequeña transición de retorno; setActive() también limpia el transform.
+-    slide.style.transition = 'transform .25s ease';
+-    slide.style.transform  = '';
+-    setTimeout(() => { slide.style.transition = ''; }, 260);
++
++    // Respeta prefers-reduced-motion: snap-back instantáneo, sin animación.
++    if (mqReduce.matches) {
++      slide.style.transform = '';
++    } else {
++      // Pequeña transición de retorno; setActive() también limpia el transform.
++      slide.style.transition = 'transform .25s ease';
++      slide.style.transform  = '';
++      setTimeout(() => { slide.style.transition = ''; }, 260);
++    }
+ 
+     if (Math.abs(dx) > SWIPE_TH) (dx < 0 ? next : prev)();
+     drag = null;
 diff -urN '--exclude=.git' /tmp/w2/assets/js/menu-drawer.js /tmp/w2-serve/assets/js/menu-drawer.js
 --- /tmp/w2/assets/js/menu-drawer.js	1970-01-01 00:00:00.000000000 +0000
-+++ /tmp/w2-serve/assets/js/menu-drawer.js	2026-04-25 23:56:54.045981137 +0000
-@@ -0,0 +1,109 @@
++++ /tmp/w2-serve/assets/js/menu-drawer.js	2026-04-26 15:14:44.840261760 +0000
+@@ -0,0 +1,111 @@
 +/* ==========================================================================
 +   MENU-DRAWER.JS — overlay fullscreen mobile + accordion submenús
 +   --------------------------------------------------------------------------
@@ -941,8 +977,11 @@ diff -urN '--exclude=.git' /tmp/w2/assets/js/menu-drawer.js /tmp/w2-serve/assets
 +   · Focus trap mientras está abierto.
 +   · Bloquea scroll del body con .no-scroll en <html>.
 +   · Aplica inert al <main>.
-+   · Marca .is-menu-open en el .nav (override de .is-hidden y transparencia)
-+     — único acoplamiento con nav, vía DOM. Si crece, mover a CustomEvent.
++   · NO toca el .nav directamente. Despacha CustomEvent('drawer:open' /
++     'drawer:close') en `document` y deja que otros módulos reaccionen
++     (nav-scroll.js → marca is-menu-open; futuro hero.js → pausar slideshow).
++     Esto desacopla el drawer de quien escucha y permite que cualquier
++     módulo se subscriba sin que menu-drawer.js lo conozca.
 +
 +   Secciones (Ctrl+F):
 +     1) ELEMENTOS Y CONFIG
@@ -958,7 +997,6 @@ diff -urN '--exclude=.git' /tmp/w2/assets/js/menu-drawer.js /tmp/w2-serve/assets
 +  const toggle = document.querySelector('.nav-toggle');
 +  const drawer = document.querySelector('.menu-drawer');
 +  const main   = document.querySelector('main');
-+  const nav    = document.querySelector('.nav');
 +
 +  if (!toggle || !drawer) return;
 +
@@ -979,9 +1017,9 @@ diff -urN '--exclude=.git' /tmp/w2/assets/js/menu-drawer.js /tmp/w2-serve/assets
 +    toggle.classList.add('is-active');
 +    toggle.setAttribute('aria-expanded', 'true');
 +    drawer.classList.add('is-open');
-+    nav?.classList.add('is-menu-open');
 +    document.documentElement.classList.add('no-scroll');
 +    if (main) main.setAttribute('inert', '');
++    document.dispatchEvent(new CustomEvent('drawer:open'));
 +    focusables()[0]?.focus();
 +  };
 +
@@ -989,13 +1027,13 @@ diff -urN '--exclude=.git' /tmp/w2/assets/js/menu-drawer.js /tmp/w2-serve/assets
 +    toggle.classList.remove('is-active');
 +    toggle.setAttribute('aria-expanded', 'false');
 +    drawer.classList.remove('is-open');
-+    nav?.classList.remove('is-menu-open');
 +    document.documentElement.classList.remove('no-scroll');
 +    if (main) main.removeAttribute('inert');
 +    // Colapsa submenús abiertos al cerrar el drawer
 +    drawer.querySelectorAll('[aria-expanded="true"]').forEach(b => {
 +      if (b !== toggle) b.setAttribute('aria-expanded', 'false');
 +    });
++    document.dispatchEvent(new CustomEvent('drawer:close'));
 +    toggle.focus();
 +  };
 +
@@ -1154,13 +1192,52 @@ diff -urN '--exclude=.git' /tmp/w2/assets/js/menu.js /tmp/w2-serve/assets/js/men
 -    if (e.matches && isOpen()) close();
 -  });
 -})();
+diff -urN '--exclude=.git' /tmp/w2/assets/js/nav-scroll.js /tmp/w2-serve/assets/js/nav-scroll.js
+--- /tmp/w2/assets/js/nav-scroll.js	2026-04-25 23:54:19.349796319 +0000
++++ /tmp/w2-serve/assets/js/nav-scroll.js	2026-04-26 15:15:17.024263673 +0000
+@@ -1,10 +1,16 @@
+ /* ==========================================================================
+-   NAV-SCROLL.JS
+-   Comportamiento del header en respuesta al scroll:
+-     · is-scrolled  → nav sólido (texto oscuro, sombra). Se activa cuando
+-                      el scroll pasa el final del hero (threshold dinámico).
+-     · is-hidden    → nav oculto (translateY(-100%)). Se activa al scrollear
+-                      hacia abajo y se quita al scrollear hacia arriba.
++   NAV-SCROLL.JS — orquesta el estado del .nav
++
++   Estados que aplica al .nav:
++     · is-scrolled   → nav sólido (texto oscuro, sombra). Se activa cuando
++                       el scroll pasa el final del hero (threshold dinámico).
++     · is-hidden     → nav oculto (translateY(-100%)). Se activa al scrollear
++                       hacia abajo y se quita al scrollear hacia arriba.
++     · is-menu-open  → drawer mobile abierto. Lo despacha menu-drawer.js como
++                       CustomEvent('drawer:open' / 'drawer:close'); aquí lo
++                       traducimos a clase del nav (acoplamiento centralizado
++                       en este archivo, no en el drawer).
++
+    Pasivo, sin throttle (passive:true ya da 60fps en navegadores modernos).
+ 
+    Secciones (usa Ctrl+F):
+@@ -74,4 +80,8 @@
+   update();
+   window.addEventListener('scroll', update, { passive: true });
+   window.addEventListener('resize', () => { measure(); update(); }, { passive: true });
++
++  // Drawer events (despachados por menu-drawer.js): traducimos a clase del nav.
++  document.addEventListener('drawer:open',  () => nav.classList.add('is-menu-open'));
++  document.addEventListener('drawer:close', () => nav.classList.remove('is-menu-open'));
+ })();
 diff -urN '--exclude=.git' /tmp/w2/index.html /tmp/w2-serve/index.html
 --- /tmp/w2/index.html	2026-04-25 23:54:19.349796319 +0000
-+++ /tmp/w2-serve/index.html	2026-04-26 13:57:57.136802533 +0000
-@@ -7,30 +7,51 @@
++++ /tmp/w2-serve/index.html	2026-04-26 15:15:29.608709202 +0000
+@@ -7,30 +7,55 @@
    <meta name="theme-color" content="#0e1628">
    <title>EduBoard — dev</title>
  
++  <!-- Favicon SVG inline: cero peticiones extra, cero 404. Marca la pestaña
++       con el accent amarillo de la marca sobre el azul del primer slide. -->
++  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230e1628'/><text x='16' y='22' font-size='18' font-weight='700' text-anchor='middle' fill='%23ffdd00' font-family='system-ui'>e</text></svg>">
++
 +  <!-- =====================================================================
 +       ORDEN DE CAPAS DE CASCADA — declarado ANTES de cualquier <link>.
 +       Una capa declarada después en esta lista gana sobre las anteriores,
@@ -1190,19 +1267,19 @@ diff -urN '--exclude=.git' /tmp/w2/index.html /tmp/w2-serve/index.html
 -  <link rel="stylesheet" href="assets/css/components/hero.css?v=0.4.5">
 -  <link rel="stylesheet" href="assets/css/components/card.css?v=0.4.5">
 -  <link rel="stylesheet" href="assets/css/debug.css?v=0.4.5">
-+  <link rel="stylesheet" href="assets/css/tokens.css?v=0.5.2">
-+  <link rel="stylesheet" href="assets/css/reset.css?v=0.5.2">
-+  <link rel="stylesheet" href="assets/css/base.css?v=0.5.2">
-+  <link rel="stylesheet" href="assets/css/layout/container.css?v=0.5.2">
-+  <link rel="stylesheet" href="assets/css/layout/grid.css?v=0.5.2">
-+  <link rel="stylesheet" href="assets/css/layout/split.css?v=0.5.2">
-+  <link rel="stylesheet" href="assets/css/components/nav.css?v=0.5.2">
-+  <link rel="stylesheet" href="assets/css/components/menu-bar.css?v=0.5.2">
-+  <link rel="stylesheet" href="assets/css/components/menu-drawer.css?v=0.5.2">
-+  <link rel="stylesheet" href="assets/css/components/button.css?v=0.5.2">
-+  <link rel="stylesheet" href="assets/css/components/hero.css?v=0.5.2">
-+  <link rel="stylesheet" href="assets/css/components/card.css?v=0.5.2">
-+  <link rel="stylesheet" href="assets/css/debug.css?v=0.5.2">
++  <link rel="stylesheet" href="assets/css/tokens.css?v=0.5.3">
++  <link rel="stylesheet" href="assets/css/reset.css?v=0.5.3">
++  <link rel="stylesheet" href="assets/css/base.css?v=0.5.3">
++  <link rel="stylesheet" href="assets/css/layout/container.css?v=0.5.3">
++  <link rel="stylesheet" href="assets/css/layout/grid.css?v=0.5.3">
++  <link rel="stylesheet" href="assets/css/layout/split.css?v=0.5.3">
++  <link rel="stylesheet" href="assets/css/components/nav.css?v=0.5.3">
++  <link rel="stylesheet" href="assets/css/components/menu-bar.css?v=0.5.3">
++  <link rel="stylesheet" href="assets/css/components/menu-drawer.css?v=0.5.3">
++  <link rel="stylesheet" href="assets/css/components/button.css?v=0.5.3">
++  <link rel="stylesheet" href="assets/css/components/hero.css?v=0.5.3">
++  <link rel="stylesheet" href="assets/css/components/card.css?v=0.5.3">
++  <link rel="stylesheet" href="assets/css/debug.css?v=0.5.3">
  </head>
  
  <!-- class="debug" activa los bordes/badges de desarrollo. Quitar para producción. -->
@@ -1222,7 +1299,7 @@ diff -urN '--exclude=.git' /tmp/w2/index.html /tmp/w2-serve/index.html
        <span></span><span></span><span></span>
      </button>
  
-@@ -55,80 +76,20 @@
+@@ -55,80 +80,20 @@
      </a>
  
      <!-- =====================================================================
@@ -1315,7 +1392,7 @@ diff -urN '--exclude=.git' /tmp/w2/index.html /tmp/w2-serve/index.html
      </nav>
  
      <div class="nav-right">
-@@ -143,6 +104,85 @@
+@@ -143,6 +108,85 @@
    </div>
  </header>
  
@@ -1401,15 +1478,15 @@ diff -urN '--exclude=.git' /tmp/w2/index.html /tmp/w2-serve/index.html
  <main>
  
    <!-- =====================================================================
-@@ -290,8 +330,8 @@
+@@ -290,8 +334,8 @@
  
  </main>
  
 -<script src="assets/js/nav-scroll.js?v=0.4.5" defer></script>
 -<script src="assets/js/menu.js?v=0.4.5" defer></script>
 -<script src="assets/js/hero.js?v=0.4.5" defer></script>
-+<script src="assets/js/nav-scroll.js?v=0.5.2" defer></script>
-+<script src="assets/js/menu-drawer.js?v=0.5.2" defer></script>
-+<script src="assets/js/hero.js?v=0.5.2" defer></script>
++<script src="assets/js/nav-scroll.js?v=0.5.3" defer></script>
++<script src="assets/js/menu-drawer.js?v=0.5.3" defer></script>
++<script src="assets/js/hero.js?v=0.5.3" defer></script>
  </body>
  </html>

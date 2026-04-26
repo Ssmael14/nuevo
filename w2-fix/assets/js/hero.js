@@ -38,7 +38,10 @@
 
   const total = slides.length;
   let current = 0;
-  let paused  = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Detección persistente: lo consultamos en cada gesto, no solo al cargar,
+  // por si el usuario cambia la preferencia del sistema en caliente.
+  const mqReduce = matchMedia('(prefers-reduced-motion: reduce)');
+  let paused  = mqReduce.matches;
 
   if (totalEl) totalEl.textContent = String(total).padStart(2, '0');
 
@@ -174,10 +177,16 @@
     const slide = slides[current];
 
     hero.classList.remove('is-dragging');
-    // Pequeña transición de retorno; setActive() también limpia el transform.
-    slide.style.transition = 'transform .25s ease';
-    slide.style.transform  = '';
-    setTimeout(() => { slide.style.transition = ''; }, 260);
+
+    // Respeta prefers-reduced-motion: snap-back instantáneo, sin animación.
+    if (mqReduce.matches) {
+      slide.style.transform = '';
+    } else {
+      // Pequeña transición de retorno; setActive() también limpia el transform.
+      slide.style.transition = 'transform .25s ease';
+      slide.style.transform  = '';
+      setTimeout(() => { slide.style.transition = ''; }, 260);
+    }
 
     if (Math.abs(dx) > SWIPE_TH) (dx < 0 ? next : prev)();
     drag = null;
