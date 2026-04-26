@@ -13,6 +13,7 @@
      2) DESKTOP (≥960px)
    ========================================================================== */
 
+@layer component {
 
 /* === 1) BASE — oculto por defecto, manda el drawer en mobile ============== */
 
@@ -76,3 +77,5 @@
        <div class="menu-bar-dropdown" role="menu">...</div>
      </li>
    El dropdown vive en este archivo (no en menu-drawer.css). */
+
+}

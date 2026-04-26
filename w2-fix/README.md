@@ -1,93 +1,167 @@
-# Refactor estructural — drawer fuera del header (v0.5.0)
+# Refactor v0.5.1 — `@layer` en CSS (recomendación #2)
 
-Este es el cambio recomendado #1 de la review: separar conceptual y físicamente
-el **header** (`<header class="nav">`) del **drawer mobile** (`<nav class="menu-drawer">`).
-Antes el drawer vivía dentro del header y eso causaba la cascada de bugs de
-stacking que arrastramos en v0.4.x.
+Cambia el control de la cascada de "depende del orden de los `<link>`" a
+"lo declaras explícitamente con un `@layer` en `<head>`". A partir de aquí,
+añadir, quitar o reordenar archivos CSS no puede invertir la cascada.
 
-## Qué cambia en HTML
+## Cambio núcleo
 
-```diff
-- <header>
--   <nav-toggle>, <logo>
--   <nav class="menu">              ← drawer DENTRO del header (problema)
--     ...items + footer
--   </nav>
--   <nav-right>
-- </header>
+En `<head>`, **antes** de los `<link>`:
 
-+ <header>
-+   <nav-toggle>, <logo>
-+   <nav class="menu-bar">          ← solo desktop, items horizontales
-+     ...items
-+   </nav>
-+   <nav-right>
-+ </header>
-+
-+ <nav class="menu-drawer">          ← solo mobile, HERMANO del header
-+   ...items + footer
-+ </nav>
+```html
+<style>@layer reset, tokens, base, layout, component, debug;</style>
 ```
 
-## Qué cambia en archivos
+El orden de izquierda a derecha = de menor a mayor prioridad. Una regla en
+una capa más a la derecha gana, sin importar specificity ni orden de archivos.
 
-| Archivo | Acción |
+Cada CSS está envuelto en su capa:
+
+```css
+/* nav.css */
+@layer component {
+  .nav { ... }
+}
+
+/* debug.css */
+@layer debug {
+  body.debug * { outline: ... }   /* gana siempre, aunque tenga specificity baja */
+}
+```
+
+## Ganancias concretas
+
+- **Adiós a las guerras de specificity en el futuro.** Cuando agregues una
+  librería de form, modals, datepicker... sus reglas viven en su propia capa
+  (o sin capa = pierden contra todo lo declarado). Tu CSS gana sin `!important`.
+- **Reordenar `<link>` no rompe nada.** El orden visual solo importa dentro
+  de la misma capa.
+- **Override semántico explícito.** `@layer debug` siempre gana → puedes
+  usar selectores simples (`.foo`) en debug sin pelear contra componentes.
+
+## Archivos modificados
+
+Todos los CSS quedaron envueltos en `@layer X { ... }`, con el comentario de
+cabecera intacto encima del wrapper:
+
+| Archivo | Capa |
 |---|---|
-| `index.html` | reescrito (header reorganizado + `.menu-drawer` separado + `?v=0.5.0`) |
-| `assets/css/tokens.css` | bumpea `--version` a `v0.5.0` |
-| `assets/css/components/nav.css` | revertido a estado limpio (los parches de stacking ya no son necesarios), comentario de cabecera ampliado |
-| `assets/css/components/menu-bar.css` | **nuevo** — barra horizontal desktop |
-| `assets/css/components/menu-drawer.css` | **nuevo** — overlay fullscreen mobile + accordion + footer |
-| `assets/css/components/menu.css` | **borrar** — sustituido por los dos anteriores |
-| `assets/js/menu-drawer.js` | **nuevo** (= antiguo `menu.js` con selectores `.menu` → `.menu-drawer`) |
-| `assets/js/menu.js` | **borrar** — renombrado |
+| `assets/css/reset.css` | `reset` |
+| `assets/css/tokens.css` | `tokens` |
+| `assets/css/base.css` | `base` |
+| `assets/css/layout/container.css` | `layout` |
+| `assets/css/layout/grid.css` | `layout` |
+| `assets/css/layout/split.css` | `layout` |
+| `assets/css/components/nav.css` | `component` |
+| `assets/css/components/menu-bar.css` | `component` |
+| `assets/css/components/menu-drawer.css` | `component` |
+| `assets/css/components/button.css` | `component` |
+| `assets/css/components/hero.css` | `component` |
+| `assets/css/components/card.css` | `component` |
+| `assets/css/debug.css` | `debug` |
 
-## Cómo aplicar (PowerShell, desde la raíz del repo `w2`)
+Y en `index.html`:
+- Declaración `<style>@layer reset, tokens, base, layout, component, debug;</style>` añadida en `<head>` antes de los `<link>`.
+- `--version` bumpeada a `v0.5.1` y los 16 cache-busters `?v=0.5.1`.
+
+## Cómo aplicar (PowerShell, desde la raíz de `w2`)
 
 ```powershell
 $base = "https://raw.githubusercontent.com/ssmael14/nuevo/claude/extract-website-styles-NkVGx/w2-fix"
 
-# 1) Reemplaza los archivos modificados / añade los nuevos
-curl.exe -fsSL "$base/index.html"                                    -o index.html
-curl.exe -fsSL "$base/assets/css/tokens.css"                         -o assets/css/tokens.css
-curl.exe -fsSL "$base/assets/css/components/nav.css"                 -o assets/css/components/nav.css
-curl.exe -fsSL "$base/assets/css/components/menu-bar.css"            -o assets/css/components/menu-bar.css
-curl.exe -fsSL "$base/assets/css/components/menu-drawer.css"         -o assets/css/components/menu-drawer.css
-curl.exe -fsSL "$base/assets/js/menu-drawer.js"                      -o assets/js/menu-drawer.js
+# index.html (declaración @layer + cache busters v0.5.1)
+curl.exe -fsSL "$base/index.html"                                 -o index.html
 
-# 2) Borra los archivos viejos (renombrados / sustituidos)
-Remove-Item assets\css\components\menu.css
-Remove-Item assets\js\menu.js
+# Foundation
+curl.exe -fsSL "$base/assets/css/tokens.css"                      -o assets/css/tokens.css
+curl.exe -fsSL "$base/assets/css/reset.css"                       -o assets/css/reset.css
+curl.exe -fsSL "$base/assets/css/base.css"                        -o assets/css/base.css
+curl.exe -fsSL "$base/assets/css/debug.css"                       -o assets/css/debug.css
+
+# Layout
+curl.exe -fsSL "$base/assets/css/layout/container.css"            -o assets/css/layout/container.css
+curl.exe -fsSL "$base/assets/css/layout/grid.css"                 -o assets/css/layout/grid.css
+curl.exe -fsSL "$base/assets/css/layout/split.css"                -o assets/css/layout/split.css
+
+# Components
+curl.exe -fsSL "$base/assets/css/components/nav.css"              -o assets/css/components/nav.css
+curl.exe -fsSL "$base/assets/css/components/menu-bar.css"         -o assets/css/components/menu-bar.css
+curl.exe -fsSL "$base/assets/css/components/menu-drawer.css"      -o assets/css/components/menu-drawer.css
+curl.exe -fsSL "$base/assets/css/components/button.css"           -o assets/css/components/button.css
+curl.exe -fsSL "$base/assets/css/components/hero.css"             -o assets/css/components/hero.css
+curl.exe -fsSL "$base/assets/css/components/card.css"             -o assets/css/components/card.css
+
+# JS sin cambios respecto a v0.5.0 (lo bajo igual por completitud)
+curl.exe -fsSL "$base/assets/js/menu-drawer.js"                   -o assets/js/menu-drawer.js
 ```
 
 Equivalente bash/zsh:
 
 ```bash
 base=https://raw.githubusercontent.com/ssmael14/nuevo/claude/extract-website-styles-NkVGx/w2-fix
-curl -fsSL "$base/index.html"                                    -o index.html
-curl -fsSL "$base/assets/css/tokens.css"                         -o assets/css/tokens.css
-curl -fsSL "$base/assets/css/components/nav.css"                 -o assets/css/components/nav.css
-curl -fsSL "$base/assets/css/components/menu-bar.css"            -o assets/css/components/menu-bar.css
-curl -fsSL "$base/assets/css/components/menu-drawer.css"         -o assets/css/components/menu-drawer.css
-curl -fsSL "$base/assets/js/menu-drawer.js"                      -o assets/js/menu-drawer.js
-rm assets/css/components/menu.css assets/js/menu.js
+files=(
+  index.html
+  assets/css/tokens.css
+  assets/css/reset.css
+  assets/css/base.css
+  assets/css/debug.css
+  assets/css/layout/container.css
+  assets/css/layout/grid.css
+  assets/css/layout/split.css
+  assets/css/components/nav.css
+  assets/css/components/menu-bar.css
+  assets/css/components/menu-drawer.css
+  assets/css/components/button.css
+  assets/css/components/hero.css
+  assets/css/components/card.css
+  assets/js/menu-drawer.js
+)
+for f in "${files[@]}"; do curl -fsSL "$base/$f" -o "$f"; done
 ```
 
-## Verificación visual
+## Verificación
 
-Tras aplicar y pushear, en `duecaz.github.io/w2/` deberías ver:
+```powershell
+Select-String -Path index.html -Pattern '@layer reset, tokens'
+Select-String -Path assets\css\tokens.css -Pattern '--version'
+Get-ChildItem assets\css -Recurse -Filter '*.css' | ForEach-Object {
+  $first = (Get-Content $_.FullName | Select-String '^@layer').Line
+  "{0,-50}  {1}" -f $_.Name, $first
+}
+```
 
-- Esquina superior derecha: badge `DEBUG v0.5.0` (si no, hay caché vieja).
-- Desktop ≥960px: barra de navegación horizontal blanca sobre el hero, con underline al hover.
-- Mobile <960px: hamburguesa funciona; al abrir, drawer fullscreen blanco; X / logo / WhatsApp visibles arriba sobre el header solid.
+Tras refrescar `duecaz.github.io/w2/`:
+- Badge de la esquina debe leer **DEBUG v0.5.1**.
+- Visualmente nada cambia (capas no alteran el render actual; solo aseguran el orden a futuro).
 
-## Lo que ya no necesitas (deuda eliminada)
+## Cómo añadir nuevos archivos CSS de aquí en adelante
 
-- `position: relative; z-index: 1` en `.nav-toggle` / `.nav-logo` / `.nav-right` — ya no hace falta porque el drawer no es descendiente del nav.
-- Animar el auto-hide con `top` en lugar de `transform` — vuelve a ser `transform` (más eficiente, GPU). Sin descendientes fixed dentro del nav, no hay nada que atrapar.
-- El `--z-menu: 900` sigue existiendo y ahora **realmente significa** "z-index global del drawer respecto al page", como debería.
+1. Crea el archivo, e.g. `assets/css/components/footer.css`.
+2. Envuelve su contenido en `@layer component { ... }`.
+3. Añádelo en `index.html` con `?v=` actualizado.
+4. Listo — no importa dónde esté en el orden de `<link>`.
 
-## Para la próxima
+Si algún día metes una librería externa (datepicker, modal, etc.) sin
+control de su CSS, su código vivirá fuera de toda capa = mayor prioridad
+que cualquier capa. Para domarla, envuélvela tú:
 
-- Cuando quieras añadir dropdowns en hover en desktop, el lugar correcto es `menu-bar.css` (TODO al final del archivo).
-- Los items del drawer y de la barra están duplicados en HTML — cuando integres un build step (Eleventy / Astro / lo que sea) puedes consolidar en una `<template>` única.
+```html
+<style>
+  @import url("https://cdn.example/datepicker.css") layer(vendor);
+</style>
+```
+
+Y declara `vendor` en el orden que toque:
+
+```html
+<style>@layer reset, tokens, base, layout, vendor, component, debug;</style>
+```
+
+Aquí `vendor` queda entre `layout` y `component`: tus componentes ganan,
+pero la librería gana contra layout / base / reset.
+
+## Soporte
+
+`@layer` funciona en **Chrome 99+, Firefox 97+, Safari 15.4+** (todos
+desde marzo 2022). En navegadores anteriores, todo el CSS se ignora — pero
+ese rango ya está fuera de cualquier matriz de soporte razonable.

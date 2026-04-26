@@ -41,6 +41,7 @@
      7) DESKTOP overrides (>= 960px)
    ========================================================================== */
 
+@layer component {
 
 /* === 1) BASE Y MODOS DE COLOR =============================================== */
 
@@ -182,4 +183,6 @@ body.debug .nav-version::before { content: "DEBUG " var(--version, "v?"); }
   .nav-toggle { display: none; }
   .nav-logo   { justify-self: start; }
   .nav-inner  { gap: var(--sp-6); }
+}
+
 }

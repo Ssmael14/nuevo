@@ -6,9 +6,11 @@
      xl: 1280px  (desktop amplio)
    ========================================================================== */
 
+@layer tokens {
+
 :root{
   /* Versión (mostrada en el badge de debug y en el ?v=X.Y.Z de los assets) */
-  --version: "v0.5.0";
+  --version: "v0.5.1";
 
   /* Colores base */
   --c-bg:        #ffffff;
@@ -105,4 +107,6 @@
   --fg-themed:      #ffffff;
   --fg-soft-themed: rgba(255,255,255,.74);
   --accent-themed:  #ff7a59;
+}
+
 }
