@@ -3,18 +3,33 @@
 
    Layout:
      Mobile  (<960px):  [hamb]  [logo centrado]  [whatsapp]
-     Desktop (>=960px): [logo]  [menu horizontal]  ...  [whatsapp]
+     Desktop (>=960px): [logo]  [menu-bar horizontal]  ...  [whatsapp]
 
-   Estados (combinables, manejados por JS):
+   Componentes que viven dentro:
+     .nav-toggle          → hamburguesa (mobile only)
+     .nav-logo            → logo SVG con currentColor
+     .menu-bar            → componente externo (menu-bar.css), desktop only
+     .nav-right           → contenedor de versión-debug + WhatsApp
+
+   Componentes hermanos (NO descendientes):
+     .menu-drawer         → overlay fullscreen mobile (menu-drawer.css)
+                            Es hermano del header a propósito: anidarlo aquí
+                            crearía un containing block que atraparía su
+                            position:fixed y problemas de stacking. Su z-index
+                            (--z-menu = 900) es menor que el del nav (1000)
+                            para que el header pinte encima — ver menu-drawer.css.
+
+   Estados del nav (combinables, manejados por JS):
      .nav                  → sólido por defecto (páginas sin hero).
      .nav.nav-over-hero    → transparente, texto blanco (vive sobre el hero).
-     .nav.is-scrolled      → fuerza sólido (scroll pasó el hero).
+     .nav.is-scrolled      → fuerza sólido (scroll pasó el hero) — nav-scroll.js.
      .nav.is-hidden        → oculta el nav (translateY(-100%)) al scrollear ↓.
-     .nav.is-menu-open     → fuerza sólido + visible (drawer abierto).
+     .nav.is-menu-open     → fuerza sólido + visible (drawer abierto)
+                              — la añade menu-drawer.js cuando el drawer abre.
      .nav:focus-within     → fuerza visible (algo del nav tiene foco).
 
    Todos los hijos usan currentColor → un único toggle de color en .nav
-   cambia logo, hamburguesa, links, whatsapp y badge debug.
+   cambia logo, hamburguesa, menu-bar, whatsapp y badge debug.
 
    Secciones (Ctrl+F):
      1) BASE Y MODOS DE COLOR
@@ -36,14 +51,12 @@
   background: var(--c-bg);
   color: var(--c-text);
   box-shadow: var(--shadow-nav);
-  /* Auto-hide se anima con `top` (no con transform). transform crearía un
-     containing block para descendientes position:fixed → atraparía a .menu
-     dentro del nav. Para una barra de 64px el coste de animar `top` es
-     imperceptible. */
+  /* Animamos color/bg/shadow Y transform (auto-hide). */
   transition: background var(--t-base),
               color      var(--t-base),
               box-shadow var(--t-base),
-              top        var(--t-base);
+              transform  var(--t-base);
+  will-change: transform;
 }
 
 /* Sobre el hero: transparente + texto claro. */
@@ -76,15 +89,14 @@
 
 /* === 2) AUTO-HIDE =========================================================== */
 
-/* Scroll ↓ oculta el nav subiéndolo fuera de pantalla.
-   Usamos `top` en vez de `transform` a propósito — ver nota en .nav. */
-.nav.is-hidden { top: calc(-1 * var(--nav-h)); }
+/* Scroll ↓ oculta el nav. Estos overrides aseguran que esté visible cuando: */
+.nav.is-hidden { transform: translateY(-100%); }
 
 /* ...el menú está abierto (no podemos perder el contexto). */
 .nav.is-menu-open,
 /* ...o algo dentro del nav tiene foco por teclado (Tab al logo, etc). */
 .nav:focus-within {
-  top: 0;
+  transform: translateY(0);
 }
 
 
@@ -108,9 +120,6 @@
   width: 40px; height: 40px;
   color: inherit;
   -webkit-tap-highlight-color: transparent;
-  /* z-index:1 dentro del stacking context del nav → queda por encima
-     del .menu (drawer mobile) cuando este se abre. Ver nota en menu.css. */
-  position: relative; z-index: 1;
 }
 .nav-toggle span {
   display: block;
@@ -132,7 +141,6 @@
   justify-self: center;
   display: inline-flex; align-items: center;
   color: inherit;
-  position: relative; z-index: 1;     /* encima del .menu — ver nota en .nav-toggle */
 }
 .nav-logo svg { height: 28px; width: auto; }
 
@@ -145,7 +153,6 @@
   align-items: center;
   gap: var(--sp-3);
   color: inherit;
-  position: relative; z-index: 1;     /* encima del .menu — ver nota en .nav-toggle */
 }
 
 .nav-whatsapp {

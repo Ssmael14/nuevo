@@ -1,55 +1,93 @@
-# Fix para duecaz/w2 — menú: contraste desktop + drawer mobile
+# Refactor estructural — drawer fuera del header (v0.5.0)
 
-Cuatro archivos modificados:
+Este es el cambio recomendado #1 de la review: separar conceptual y físicamente
+el **header** (`<header class="nav">`) del **drawer mobile** (`<nav class="menu-drawer">`).
+Antes el drawer vivía dentro del header y eso causaba la cascada de bugs de
+stacking que arrastramos en v0.4.x.
 
-- `assets/css/components/nav.css`
-- `assets/css/components/menu.css`
-- `assets/css/tokens.css`     ← versión bumpeada a v0.4.6
-- `index.html`                ← cache busters `?v=0.4.6` (15 ocurrencias)
+## Qué cambia en HTML
 
-Más detalles en `menu-fix.patch` en la raíz del repo.
+```diff
+- <header>
+-   <nav-toggle>, <logo>
+-   <nav class="menu">              ← drawer DENTRO del header (problema)
+-     ...items + footer
+-   </nav>
+-   <nav-right>
+- </header>
 
-## Bugs que cierra
++ <header>
++   <nav-toggle>, <logo>
++   <nav class="menu-bar">          ← solo desktop, items horizontales
++     ...items
++   </nav>
++   <nav-right>
++ </header>
++
++ <nav class="menu-drawer">          ← solo mobile, HERMANO del header
++   ...items + footer
++ </nav>
+```
 
-1. **Desktop**: el texto del menú salía negro sobre el hero oscuro.
-   Causa: `.menu` define color de skin para mobile y el override desktop no lo neutralizaba.
-   Fix: añadido `color: inherit` al `@media (min-width:960px) .menu`.
+## Qué cambia en archivos
 
-2. **Mobile**: al abrir el drawer, no se veía nada del menú (parecía que no tenía fondo).
-   Causa: `.nav` aplicaba `transform` (vía `is-hidden` / `is-menu-open` / `:focus-within`) y
-   `will-change: transform`. Cualquier transform en un ancestro convierte ese ancestro en
-   *containing block* de descendientes `position: fixed`. Como `.menu` vive dentro del header,
-   su `inset: 0` se estaba calculando contra los 64 px del nav, no contra el viewport.
-   Fix: animar el auto-hide con `top` en lugar de `transform`. Sin transform, sin trampa.
+| Archivo | Acción |
+|---|---|
+| `index.html` | reescrito (header reorganizado + `.menu-drawer` separado + `?v=0.5.0`) |
+| `assets/css/tokens.css` | bumpea `--version` a `v0.5.0` |
+| `assets/css/components/nav.css` | revertido a estado limpio (los parches de stacking ya no son necesarios), comentario de cabecera ampliado |
+| `assets/css/components/menu-bar.css` | **nuevo** — barra horizontal desktop |
+| `assets/css/components/menu-drawer.css` | **nuevo** — overlay fullscreen mobile + accordion + footer |
+| `assets/css/components/menu.css` | **borrar** — sustituido por los dos anteriores |
+| `assets/js/menu-drawer.js` | **nuevo** (= antiguo `menu.js` con selectores `.menu` → `.menu-drawer`) |
+| `assets/js/menu.js` | **borrar** — renombrado |
 
-3. **Mobile**: con el drawer abierto la X y el logo desaparecían (blanco sobre blanco aparente).
-   Causa real: NO era un problema de color. `.menu` tenía `z-index: var(--z-menu)` (= 900) y
-   está *dentro* de `.nav` (z=1000), por lo que dentro del stacking context del nav el menu
-   pintaba encima de la X / logo / WhatsApp (que eran `static`, z=auto). El comentario
-   original "el nav vive con z-index mayor encima" solo es cierto si nav y menu son
-   hermanos — al estar anidados, el z-index local del menu gana a sus tíos estáticos.
-   Fix: quitado el z-index de `.menu` (no lo necesita: queda encima del page por estar dentro
-   del nav) + `position: relative; z-index: 1` en `.nav-toggle`, `.nav-logo`, `.nav-right`
-   para que se pinten encima del drawer dentro del stacking context del nav.
-
-## Cómo aplicar
-
-Desde la raíz de tu repo `w2` (PowerShell — usa `curl.exe` para evitar el alias):
+## Cómo aplicar (PowerShell, desde la raíz del repo `w2`)
 
 ```powershell
 $base = "https://raw.githubusercontent.com/ssmael14/nuevo/claude/extract-website-styles-NkVGx/w2-fix"
-curl.exe -fsSL "$base/assets/css/components/nav.css"   -o assets/css/components/nav.css
-curl.exe -fsSL "$base/assets/css/components/menu.css"  -o assets/css/components/menu.css
-curl.exe -fsSL "$base/assets/css/tokens.css"           -o assets/css/tokens.css
-curl.exe -fsSL "$base/index.html"                       -o index.html
+
+# 1) Reemplaza los archivos modificados / añade los nuevos
+curl.exe -fsSL "$base/index.html"                                    -o index.html
+curl.exe -fsSL "$base/assets/css/tokens.css"                         -o assets/css/tokens.css
+curl.exe -fsSL "$base/assets/css/components/nav.css"                 -o assets/css/components/nav.css
+curl.exe -fsSL "$base/assets/css/components/menu-bar.css"            -o assets/css/components/menu-bar.css
+curl.exe -fsSL "$base/assets/css/components/menu-drawer.css"         -o assets/css/components/menu-drawer.css
+curl.exe -fsSL "$base/assets/js/menu-drawer.js"                      -o assets/js/menu-drawer.js
+
+# 2) Borra los archivos viejos (renombrados / sustituidos)
+Remove-Item assets\css\components\menu.css
+Remove-Item assets\js\menu.js
 ```
 
-O equivalente con bash/zsh:
+Equivalente bash/zsh:
 
 ```bash
 base=https://raw.githubusercontent.com/ssmael14/nuevo/claude/extract-website-styles-NkVGx/w2-fix
-curl -fsSL "$base/assets/css/components/nav.css"   -o assets/css/components/nav.css
-curl -fsSL "$base/assets/css/components/menu.css"  -o assets/css/components/menu.css
-curl -fsSL "$base/assets/css/tokens.css"           -o assets/css/tokens.css
-curl -fsSL "$base/index.html"                       -o index.html
+curl -fsSL "$base/index.html"                                    -o index.html
+curl -fsSL "$base/assets/css/tokens.css"                         -o assets/css/tokens.css
+curl -fsSL "$base/assets/css/components/nav.css"                 -o assets/css/components/nav.css
+curl -fsSL "$base/assets/css/components/menu-bar.css"            -o assets/css/components/menu-bar.css
+curl -fsSL "$base/assets/css/components/menu-drawer.css"         -o assets/css/components/menu-drawer.css
+curl -fsSL "$base/assets/js/menu-drawer.js"                      -o assets/js/menu-drawer.js
+rm assets/css/components/menu.css assets/js/menu.js
 ```
+
+## Verificación visual
+
+Tras aplicar y pushear, en `duecaz.github.io/w2/` deberías ver:
+
+- Esquina superior derecha: badge `DEBUG v0.5.0` (si no, hay caché vieja).
+- Desktop ≥960px: barra de navegación horizontal blanca sobre el hero, con underline al hover.
+- Mobile <960px: hamburguesa funciona; al abrir, drawer fullscreen blanco; X / logo / WhatsApp visibles arriba sobre el header solid.
+
+## Lo que ya no necesitas (deuda eliminada)
+
+- `position: relative; z-index: 1` en `.nav-toggle` / `.nav-logo` / `.nav-right` — ya no hace falta porque el drawer no es descendiente del nav.
+- Animar el auto-hide con `top` en lugar de `transform` — vuelve a ser `transform` (más eficiente, GPU). Sin descendientes fixed dentro del nav, no hay nada que atrapar.
+- El `--z-menu: 900` sigue existiendo y ahora **realmente significa** "z-index global del drawer respecto al page", como debería.
+
+## Para la próxima
+
+- Cuando quieras añadir dropdowns en hover en desktop, el lugar correcto es `menu-bar.css` (TODO al final del archivo).
+- Los items del drawer y de la barra están duplicados en HTML — cuando integres un build step (Eleventy / Astro / lo que sea) puedes consolidar en una `<template>` única.

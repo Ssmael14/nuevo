@@ -8,7 +8,7 @@
 
 :root{
   /* Versión (mostrada en el badge de debug y en el ?v=X.Y.Z de los assets) */
-  --version: "v0.4.6";
+  --version: "v0.5.0";
 
   /* Colores base */
   --c-bg:        #ffffff;

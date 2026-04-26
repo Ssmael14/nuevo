@@ -1,111 +1,765 @@
+diff -urN '--exclude=.git' /tmp/w2/assets/css/components/menu-bar.css /tmp/w2-serve/assets/css/components/menu-bar.css
+--- /tmp/w2/assets/css/components/menu-bar.css	1970-01-01 00:00:00.000000000 +0000
++++ /tmp/w2-serve/assets/css/components/menu-bar.css	2026-04-25 23:55:39.261976692 +0000
+@@ -0,0 +1,78 @@
++/* ==========================================================================
++   MENU-BAR.CSS — barra horizontal de navegación (DESKTOP ≥960px)
++   --------------------------------------------------------------------------
++   · Vive dentro del .nav-inner como una columna del grid (auto 1fr auto).
++   · `display: contents` hace que el <ul> suba al grid del nav-inner, así
++     los items se alinean en la fila del header sin wrapper extra.
++   · Hidden por defecto (mobile) — ahí manda el .menu-drawer.
++   · Sin submenús ni footer aquí: si más adelante quieres dropdowns, viven
++     en este archivo (TODO al final).
++
++   Secciones (Ctrl+F):
++     1) BASE (oculto en mobile)
++     2) DESKTOP (≥960px)
++   ========================================================================== */
++
++
++/* === 1) BASE — oculto por defecto, manda el drawer en mobile ============== */
++
++.menu-bar { display: none; }
++
++
++/* === 2) DESKTOP (≥960px) ================================================== */
++
++@media (min-width: 960px) {
++  .menu-bar {
++    display: contents;        /* el <ul> sube al grid del .nav-inner */
++    color: inherit;           /* hereda el color del .nav (.nav-over-hero → blanco) */
++  }
++
++  .menu-bar-list {
++    justify-self: start;
++    display: flex;
++    flex-direction: row;
++    align-items: center;
++    gap: var(--sp-8);
++    list-style: none;
++    margin: 0; padding: 0;
++  }
++
++  .menu-bar-link {
++    position: relative;
++    display: inline-flex;
++    align-items: center;
++    padding: var(--sp-2) 0;
++    font: inherit;
++    font-size: 14px;
++    font-weight: var(--fw-medium);
++    color: inherit;
++    background: transparent;
++    border: 0;
++    cursor: pointer;
++    -webkit-tap-highlight-color: transparent;
++  }
++
++  /* Underline animado al hover/active.
++     scale-X 0→1 da una entrada limpia desde la izquierda. */
++  .menu-bar-link::before {
++    content: "";
++    position: absolute;
++    left: 0; right: 0; bottom: -6px;
++    height: 2px;
++    background: currentColor;
++    transform: scaleX(0);
++    transform-origin: left center;
++    transition: transform var(--t-base);
++  }
++  .menu-bar-link:hover::before,
++  .menu-bar-link[aria-current="page"]::before { transform: scaleX(1); }
++}
++
++
++/* TODO — siguiente iteración: dropdowns en hover para Productos / Soluciones.
++   Estructura sugerida:
++     <li class="menu-bar-item has-dropdown">
++       <button class="menu-bar-link" aria-expanded="false">Productos</button>
++       <div class="menu-bar-dropdown" role="menu">...</div>
++     </li>
++   El dropdown vive en este archivo (no en menu-drawer.css). */
+diff -urN '--exclude=.git' /tmp/w2/assets/css/components/menu-drawer.css /tmp/w2-serve/assets/css/components/menu-drawer.css
+--- /tmp/w2/assets/css/components/menu-drawer.css	1970-01-01 00:00:00.000000000 +0000
++++ /tmp/w2-serve/assets/css/components/menu-drawer.css	2026-04-25 23:56:07.461978368 +0000
+@@ -0,0 +1,170 @@
++/* ==========================================================================
++   MENU-DRAWER.CSS — overlay fullscreen mobile (<960px)
++   --------------------------------------------------------------------------
++   · Vive a nivel de body (HERMANO del header), NO dentro de él.
++     Esto evita el clásico problema de stacking context: el drawer es
++     z-index:900, el header z-index:1000, así el header pinta encima del
++     drawer y la X / logo / WhatsApp siguen visibles cuando el drawer abre.
++   · Position fixed; inset:0; padding-top = nav-h para que el contenido del
++     drawer no quede tapado por el header.
++   · Submenús accordion: <button aria-expanded> + chevron que rota.
++   · Footer con redes sociales + CTA grande.
++   · Hidden ≥960px — ahí manda el .menu-bar dentro del header.
++
++   Secciones (Ctrl+F):
++     1) CONTAINER (visibility, transición open/close)
++     2) LIST + ITEMS (link, botón submenu, barra amarilla)
++     3) SUBMENÚS (accordion + chevron)
++     4) FOOTER (redes sociales + CTA)
++     5) DESKTOP (≥960px) — oculto
++   ========================================================================== */
++
++
++/* === 1) CONTAINER ========================================================= */
++
++.menu-drawer {
++  position: fixed;
++  inset: 0;
++  background: var(--c-bg);
++  color: var(--c-text);
++  z-index: var(--z-menu);     /* 900 — debajo del .nav (1000) */
++  display: flex;
++  flex-direction: column;
++  /* Reserva el alto del nav (que se pinta encima por z-index global). */
++  padding: var(--nav-h) 0 0;
++
++  /* Visibilidad: visibility para evitar clicks cuando está oculto. */
++  opacity: 0;
++  visibility: hidden;
++  pointer-events: none;
++  transition: opacity .25s ease, visibility 0s linear .25s;
++}
++.menu-drawer.is-open {
++  opacity: 1;
++  visibility: visible;
++  pointer-events: auto;
++  transition: opacity .25s ease, visibility 0s;
++}
++
++
++/* === 2) LIST + ITEMS ====================================================== */
++
++.menu-drawer-list {
++  flex: 1;
++  overflow-y: auto;
++  list-style: none;
++  margin: 0;
++  padding: var(--sp-3) 0;
++}
++
++/* .menu-drawer-link aplica a <a> y a <button> indistintamente */
++.menu-drawer-link {
++  position: relative;
++  display: flex;
++  width: 100%;
++  align-items: center;
++  justify-content: space-between;
++  gap: var(--sp-3);
++  padding: var(--sp-4) var(--sp-5);
++  font: inherit;
++  font-size: 17px;
++  font-weight: var(--fw-medium);
++  color: inherit;
++  text-align: left;
++  background: transparent;
++  border: 0;
++  cursor: pointer;
++  -webkit-tap-highlight-color: transparent;
++  transition: background var(--t-fast);
++}
++.menu-drawer-link:hover { background: rgba(0,0,0,.03); }
++
++/* Barra vertical amarilla a la izquierda en hover/active/expanded. */
++.menu-drawer-link::before {
++  content: "";
++  position: absolute;
++  left: 0; top: 25%; bottom: 25%;
++  width: 4px;
++  background: var(--c-accent);
++  opacity: 0;
++  transition: opacity var(--t-fast);
++}
++.menu-drawer-link:hover::before,
++.menu-drawer-link[aria-current="page"]::before,
++.menu-drawer-link[aria-expanded="true"]::before { opacity: 1; }
++
++
++/* === 3) SUBMENÚS — accordion ============================================== */
++
++.menu-drawer-chevron {
++  width: 14px; height: 14px;
++  fill: currentColor;
++  opacity: .55;
++  transition: transform var(--t-base);
++  flex-shrink: 0;
++}
++[aria-expanded="true"] > .menu-drawer-chevron { transform: rotate(180deg); }
++
++/* Wrapper del submenu. Estructura HTML:
++     <div class="menu-drawer-sublist"><ul>...</ul></div>
++   El truco grid-template-rows 0fr→1fr anima la altura sin medir DOM.
++   Soporte: Chrome 117+, FF 121+, Safari 17+. */
++.menu-drawer-sublist {
++  display: grid;
++  grid-template-rows: 0fr;
++  transition: grid-template-rows var(--t-base);
++}
++.menu-drawer-sublist > ul {
++  overflow: hidden;
++  min-height: 0;
++  list-style: none;
++  margin: 0; padding: 0;
++}
++[aria-expanded="true"] + .menu-drawer-sublist { grid-template-rows: 1fr; }
++
++.menu-drawer-sublist a {
++  display: block;
++  padding: var(--sp-3) var(--sp-5) var(--sp-3) calc(var(--sp-5) + var(--sp-6));
++  font-size: 15px;
++  font-weight: var(--fw-regular);
++  color: var(--c-text-soft);
++  transition: color var(--t-fast);
++}
++.menu-drawer-sublist a:hover { color: var(--c-text); }
++
++
++/* === 4) FOOTER (redes sociales + CTA) ===================================== */
++
++.menu-drawer-footer {
++  border-top: 1px solid var(--c-border);
++  padding: var(--sp-5);
++  display: flex;
++  flex-direction: column;
++  gap: var(--sp-4);
++}
++
++.menu-drawer-social {
++  display: flex;
++  gap: var(--sp-2);
++  list-style: none;
++  margin: 0; padding: 0;
++}
++.menu-drawer-social a {
++  width: 40px; height: 40px;
++  display: inline-flex;
++  align-items: center; justify-content: center;
++  border-radius: 50%;
++  color: inherit;
++  transition: background var(--t-fast);
++}
++.menu-drawer-social a:hover { background: rgba(0,0,0,.06); }
++.menu-drawer-social svg { width: 20px; height: 20px; fill: currentColor; }
++
++.menu-drawer-cta { width: 100%; justify-content: center; }
++
++
++/* === 5) DESKTOP (≥960px) — oculto ========================================= */
++
++@media (min-width: 960px) {
++  .menu-drawer { display: none; }
++}
 diff -urN '--exclude=.git' /tmp/w2/assets/css/components/menu.css /tmp/w2-serve/assets/css/components/menu.css
---- /tmp/w2/assets/css/components/menu.css	2026-04-25 17:50:16.857271076 +0000
-+++ /tmp/w2-serve/assets/css/components/menu.css	2026-04-25 22:00:38.879113152 +0000
-@@ -25,7 +25,11 @@
-   inset: 0;
-   background: var(--c-bg);
-   color: var(--c-text);
+--- /tmp/w2/assets/css/components/menu.css	2026-04-25 23:54:19.347552539 +0000
++++ /tmp/w2-serve/assets/css/components/menu.css	1970-01-01 00:00:00.000000000 +0000
+@@ -1,218 +0,0 @@
+-/* ==========================================================================
+-   MENU.CSS — full-screen overlay (mobile) + horizontal (desktop ≥960px)
+-   --------------------------------------------------------------------------
+-   · Mobile: cubre toda la pantalla (inset: 0) con padding-top = nav-h. El
+-     nav queda visible ENCIMA del menú (z-index mayor) para que el botón X,
+-     el logo y el WhatsApp sigan accesibles.
+-   · Submenús accordion: <button aria-expanded> con chevron que rota.
+-   · Footer del menú con redes sociales + CTA grande.
+-   · Mantiene la barra vertical amarilla (--c-accent) a la izquierda en
+-     hover/active — detalle visual heredado de la versión anterior.
+-
+-   Secciones (Ctrl+F):
+-     1) MENU CONTAINER (mobile full-screen + visibility)
+-     2) ITEMS (link y botón de submenu, barra amarilla)
+-     3) SUBMENÚS (accordion + chevron)
+-     4) FOOTER del menú (redes + CTA)
+-     5) DESKTOP overrides (≥ 960px)
+-   ========================================================================== */
+-
+-
+-/* === 1) MENU CONTAINER ===================================================== */
+-
+-.menu {
+-  position: fixed;
+-  inset: 0;
+-  background: var(--c-bg);
+-  color: var(--c-text);
 -  z-index: var(--z-menu);
-+  /* Sin z-index propio: .menu vive dentro de .nav (z=1000), por lo que ya
-+     queda encima del contenido principal. Dentro del stacking context del
-+     nav, los .nav-toggle/.nav-logo/.nav-right (con z-index:1 explícito en
-+     nav.css) se pintan encima del menu — así la X y el logo siguen visibles
-+     cuando el drawer está abierto. */
-   display: flex;
-   flex-direction: column;
-   /* Reserva el espacio del nav (que vive con z-index mayor encima). */
-@@ -173,6 +177,9 @@
-     position: static;
-     inset: auto;
-     background: none;
-+    color: inherit;           /* sin esto el .menu mantiene var(--c-text) (negro)
-+                                 y los .menu-link, que usan color:inherit, lo heredan,
-+                                 quedando negros sobre el hero oscuro */
-     z-index: auto;
-     display: contents;        /* el <ul> sube al grid del nav-inner */
-     padding: 0;
+-  display: flex;
+-  flex-direction: column;
+-  /* Reserva el espacio del nav (que vive con z-index mayor encima). */
+-  padding: var(--nav-h) 0 0;
+-  /* Visibilidad: usa visibility para evitar que reciba clicks oculto. */
+-  opacity: 0;
+-  visibility: hidden;
+-  pointer-events: none;
+-  transition: opacity .25s ease, visibility 0s linear .25s;
+-}
+-.menu.is-open {
+-  opacity: 1;
+-  visibility: visible;
+-  pointer-events: auto;
+-  transition: opacity .25s ease, visibility 0s;
+-}
+-
+-.menu-list {
+-  flex: 1;
+-  overflow-y: auto;
+-  list-style: none;
+-  padding: var(--sp-3) 0;
+-  margin: 0;
+-}
+-
+-
+-/* === 2) ITEMS — link y botón submenu (mismo aspecto base) ================ */
+-
+-.menu-link {
+-  position: relative;
+-  display: flex;
+-  width: 100%;
+-  align-items: center;
+-  justify-content: space-between;
+-  gap: var(--sp-3);
+-  padding: var(--sp-4) var(--sp-5);
+-  font: inherit;
+-  font-size: 17px;
+-  font-weight: var(--fw-medium);
+-  color: inherit;
+-  text-align: left;
+-  background: transparent;
+-  border: 0;
+-  cursor: pointer;
+-  -webkit-tap-highlight-color: transparent;
+-  transition: background var(--t-fast);
+-}
+-.menu-link:hover { background: rgba(0,0,0,.03); }
+-
+-/* Barra vertical amarilla (mobile) — el detalle visual que conservamos. */
+-.menu-link::before {
+-  content: "";
+-  position: absolute;
+-  left: 0; top: 25%; bottom: 25%;
+-  width: 4px;
+-  background: var(--c-accent);
+-  opacity: 0;
+-  transition: opacity var(--t-fast);
+-}
+-.menu-link:hover::before,
+-.menu-link[aria-current="page"]::before,
+-.menu-link[aria-expanded="true"]::before { opacity: 1; }
+-
+-.menu-link__icon {
+-  width: 18px; height: 18px;
+-  fill: currentColor;
+-  flex-shrink: 0;
+-}
+-
+-
+-/* === 3) SUBMENÚS — accordion =============================================== */
+-
+-.menu-chevron {
+-  width: 14px; height: 14px;
+-  fill: currentColor;
+-  opacity: .55;
+-  transition: transform var(--t-base);
+-  flex-shrink: 0;
+-}
+-/* Botón de submenu expandido → chevron rota 180° */
+-[aria-expanded="true"] > .menu-chevron { transform: rotate(180deg); }
+-
+-/* Wrapper del submenu. Estructura HTML válida:
+-     <div class="menu-sublist"><ul>...</ul></div>
+-   El truco grid-template-rows 0fr→1fr anima la altura sin medir el DOM.
+-   Soporte: Chrome 117+, FF 121+, Safari 17+. */
+-.menu-sublist {
+-  display: grid;
+-  grid-template-rows: 0fr;
+-  transition: grid-template-rows var(--t-base);
+-}
+-.menu-sublist > ul {
+-  overflow: hidden;
+-  min-height: 0;
+-  list-style: none;
+-  margin: 0; padding: 0;
+-}
+-[aria-expanded="true"] + .menu-sublist { grid-template-rows: 1fr; }
+-
+-.menu-sublist a {
+-  display: block;
+-  padding: var(--sp-3) var(--sp-5) var(--sp-3) calc(var(--sp-5) + var(--sp-6));
+-  font-size: 15px;
+-  font-weight: var(--fw-regular);
+-  color: var(--c-text-soft);
+-  transition: color var(--t-fast);
+-}
+-.menu-sublist a:hover { color: var(--c-text); }
+-
+-
+-/* === 4) FOOTER del menú (mobile only) ===================================== */
+-
+-.menu-footer {
+-  border-top: 1px solid var(--c-border);
+-  padding: var(--sp-5);
+-  display: flex;
+-  flex-direction: column;
+-  gap: var(--sp-4);
+-}
+-
+-.menu-social {
+-  display: flex;
+-  gap: var(--sp-2);
+-  list-style: none;
+-  margin: 0; padding: 0;
+-}
+-.menu-social a {
+-  width: 40px; height: 40px;
+-  display: inline-flex;
+-  align-items: center; justify-content: center;
+-  border-radius: 50%;
+-  color: inherit;
+-  transition: background var(--t-fast);
+-}
+-.menu-social a:hover { background: rgba(0,0,0,.06); }
+-.menu-social svg { width: 20px; height: 20px; fill: currentColor; }
+-
+-.menu-cta { width: 100%; justify-content: center; }
+-
+-
+-/* === 5) DESKTOP overrides (>= 960px) ====================================== */
+-
+-@media (min-width: 960px) {
+-  .menu {
+-    position: static;
+-    inset: auto;
+-    background: none;
+-    z-index: auto;
+-    display: contents;        /* el <ul> sube al grid del nav-inner */
+-    padding: 0;
+-    opacity: 1; visibility: visible; pointer-events: auto;
+-    transition: none;
+-  }
+-
+-  .menu-list {
+-    justify-self: start;
+-    display: flex;            /* ← clave: sin esto, flex-direction se ignora */
+-    flex-direction: row;
+-    align-items: center;
+-    gap: var(--sp-8);
+-    overflow: visible;
+-    padding: 0;
+-  }
+-
+-  .menu-link {
+-    padding: var(--sp-2) 0;
+-    font-size: 14px;
+-    width: auto;
+-    background: transparent;
+-  }
+-  .menu-link:hover { background: transparent; }
+-
+-  /* Sin barra vertical: en desktop usamos underline */
+-  .menu-link::before {
+-    left: 0; right: 0; top: auto; bottom: -6px;
+-    width: auto; height: 2px;
+-    opacity: 1;
+-    transform: scaleX(0);
+-    transform-origin: left center;
+-    transition: transform var(--t-base);
+-  }
+-  .menu-link:hover::before,
+-  .menu-link[aria-current="page"]::before { transform: scaleX(1); }
+-
+-  /* Submenús y footer: ocultos en desktop por ahora.
+-     TODO: convertir submenús en dropdown al hover (siguiente iteración). */
+-  .menu-link[aria-expanded] + .menu-sublist,
+-  .menu-chevron,
+-  .menu-footer { display: none; }
+-}
 diff -urN '--exclude=.git' /tmp/w2/assets/css/components/nav.css /tmp/w2-serve/assets/css/components/nav.css
---- /tmp/w2/assets/css/components/nav.css	2026-04-25 17:50:16.857271076 +0000
-+++ /tmp/w2-serve/assets/css/components/nav.css	2026-04-25 22:00:53.815113533 +0000
-@@ -36,12 +36,14 @@
-   background: var(--c-bg);
-   color: var(--c-text);
-   box-shadow: var(--shadow-nav);
--  /* Animamos color/bg/shadow Y transform (auto-hide). */
-+  /* Auto-hide se anima con `top` (no con transform). transform crearía un
-+     containing block para descendientes position:fixed → atraparía a .menu
-+     dentro del nav. Para una barra de 64px el coste de animar `top` es
-+     imperceptible. */
-   transition: background var(--t-base),
-               color      var(--t-base),
-               box-shadow var(--t-base),
--              transform  var(--t-base);
--  will-change: transform;
-+              top        var(--t-base);
- }
+--- /tmp/w2/assets/css/components/nav.css	2026-04-25 23:54:19.347552539 +0000
++++ /tmp/w2-serve/assets/css/components/nav.css	2026-04-25 23:56:29.453979675 +0000
+@@ -3,18 +3,33 @@
  
- /* Sobre el hero: transparente + texto claro. */
-@@ -74,14 +76,15 @@
+    Layout:
+      Mobile  (<960px):  [hamb]  [logo centrado]  [whatsapp]
+-     Desktop (>=960px): [logo]  [menu horizontal]  ...  [whatsapp]
++     Desktop (>=960px): [logo]  [menu-bar horizontal]  ...  [whatsapp]
  
- /* === 2) AUTO-HIDE =========================================================== */
+-   Estados (combinables, manejados por JS):
++   Componentes que viven dentro:
++     .nav-toggle          → hamburguesa (mobile only)
++     .nav-logo            → logo SVG con currentColor
++     .menu-bar            → componente externo (menu-bar.css), desktop only
++     .nav-right           → contenedor de versión-debug + WhatsApp
++
++   Componentes hermanos (NO descendientes):
++     .menu-drawer         → overlay fullscreen mobile (menu-drawer.css)
++                            Es hermano del header a propósito: anidarlo aquí
++                            crearía un containing block que atraparía su
++                            position:fixed y problemas de stacking. Su z-index
++                            (--z-menu = 900) es menor que el del nav (1000)
++                            para que el header pinte encima — ver menu-drawer.css.
++
++   Estados del nav (combinables, manejados por JS):
+      .nav                  → sólido por defecto (páginas sin hero).
+      .nav.nav-over-hero    → transparente, texto blanco (vive sobre el hero).
+-     .nav.is-scrolled      → fuerza sólido (scroll pasó el hero).
++     .nav.is-scrolled      → fuerza sólido (scroll pasó el hero) — nav-scroll.js.
+      .nav.is-hidden        → oculta el nav (translateY(-100%)) al scrollear ↓.
+-     .nav.is-menu-open     → fuerza sólido + visible (drawer abierto).
++     .nav.is-menu-open     → fuerza sólido + visible (drawer abierto)
++                              — la añade menu-drawer.js cuando el drawer abre.
+      .nav:focus-within     → fuerza visible (algo del nav tiene foco).
  
--/* Scroll ↓ oculta el nav. Estos overrides aseguran que esté visible cuando: */
--.nav.is-hidden { transform: translateY(-100%); }
-+/* Scroll ↓ oculta el nav subiéndolo fuera de pantalla.
-+   Usamos `top` en vez de `transform` a propósito — ver nota en .nav. */
-+.nav.is-hidden { top: calc(-1 * var(--nav-h)); }
+    Todos los hijos usan currentColor → un único toggle de color en .nav
+-   cambia logo, hamburguesa, links, whatsapp y badge debug.
++   cambia logo, hamburguesa, menu-bar, whatsapp y badge debug.
  
- /* ...el menú está abierto (no podemos perder el contexto). */
- .nav.is-menu-open,
- /* ...o algo dentro del nav tiene foco por teclado (Tab al logo, etc). */
- .nav:focus-within {
--  transform: translateY(0);
-+  top: 0;
- }
- 
- 
-@@ -105,6 +108,9 @@
-   width: 40px; height: 40px;
-   color: inherit;
-   -webkit-tap-highlight-color: transparent;
-+  /* z-index:1 dentro del stacking context del nav → queda por encima
-+     del .menu (drawer mobile) cuando este se abre. Ver nota en menu.css. */
-+  position: relative; z-index: 1;
- }
- .nav-toggle span {
-   display: block;
-@@ -126,6 +132,7 @@
-   justify-self: center;
-   display: inline-flex; align-items: center;
-   color: inherit;
-+  position: relative; z-index: 1;     /* encima del .menu — ver nota en .nav-toggle */
- }
- .nav-logo svg { height: 28px; width: auto; }
- 
-@@ -138,6 +145,7 @@
-   align-items: center;
-   gap: var(--sp-3);
-   color: inherit;
-+  position: relative; z-index: 1;     /* encima del .menu — ver nota en .nav-toggle */
- }
- 
- .nav-whatsapp {
+    Secciones (Ctrl+F):
+      1) BASE Y MODOS DE COLOR
 diff -urN '--exclude=.git' /tmp/w2/assets/css/tokens.css /tmp/w2-serve/assets/css/tokens.css
---- /tmp/w2/assets/css/tokens.css	2026-04-25 17:50:16.859485837 +0000
-+++ /tmp/w2-serve/assets/css/tokens.css	2026-04-25 22:19:15.451393326 +0000
+--- /tmp/w2/assets/css/tokens.css	2026-04-25 23:54:19.348872024 +0000
++++ /tmp/w2-serve/assets/css/tokens.css	2026-04-26 00:00:29.805993963 +0000
 @@ -8,7 +8,7 @@
  
  :root{
    /* Versión (mostrada en el badge de debug y en el ?v=X.Y.Z de los assets) */
 -  --version: "v0.4.5";
-+  --version: "v0.4.6";
++  --version: "v0.5.0";
  
    /* Colores base */
    --c-bg:        #ffffff;
+diff -urN '--exclude=.git' /tmp/w2/assets/js/menu-drawer.js /tmp/w2-serve/assets/js/menu-drawer.js
+--- /tmp/w2/assets/js/menu-drawer.js	1970-01-01 00:00:00.000000000 +0000
++++ /tmp/w2-serve/assets/js/menu-drawer.js	2026-04-25 23:56:54.045981137 +0000
+@@ -0,0 +1,109 @@
++/* ==========================================================================
++   MENU-DRAWER.JS — overlay fullscreen mobile + accordion submenús
++   --------------------------------------------------------------------------
++   · Toggle por hamburguesa (.nav-toggle).
++   · Cierra con: Escape, click en link hoja, cambio a desktop.
++   · Submenús accordion: click en .menu-drawer-link[aria-expanded] togglea.
++   · Focus trap mientras está abierto.
++   · Bloquea scroll del body con .no-scroll en <html>.
++   · Aplica inert al <main>.
++   · Marca .is-menu-open en el .nav (override de .is-hidden y transparencia)
++     — único acoplamiento con nav, vía DOM. Si crece, mover a CustomEvent.
++
++   Secciones (Ctrl+F):
++     1) ELEMENTOS Y CONFIG
++     2) HELPERS (isOpen, focusables)
++     3) OPEN / CLOSE
++     4) SUBMENÚS (accordion)
++     5) LISTENERS
++   ========================================================================== */
++
++(() => {
++
++  // === 1) ELEMENTOS Y CONFIG =================================================
++  const toggle = document.querySelector('.nav-toggle');
++  const drawer = document.querySelector('.menu-drawer');
++  const main   = document.querySelector('main');
++  const nav    = document.querySelector('.nav');
++
++  if (!toggle || !drawer) return;
++
++  const mqDesktop = matchMedia('(min-width: 960px)');
++
++
++  // === 2) HELPERS ============================================================
++  const isOpen = () => drawer.classList.contains('is-open');
++
++  // Lista de elementos enfocables visibles dentro del drawer (focus trap).
++  const focusables = () => drawer.querySelectorAll(
++    'a, button, [tabindex]:not([tabindex="-1"])'
++  );
++
++
++  // === 3) OPEN / CLOSE =======================================================
++  const open = () => {
++    toggle.classList.add('is-active');
++    toggle.setAttribute('aria-expanded', 'true');
++    drawer.classList.add('is-open');
++    nav?.classList.add('is-menu-open');
++    document.documentElement.classList.add('no-scroll');
++    if (main) main.setAttribute('inert', '');
++    focusables()[0]?.focus();
++  };
++
++  const close = () => {
++    toggle.classList.remove('is-active');
++    toggle.setAttribute('aria-expanded', 'false');
++    drawer.classList.remove('is-open');
++    nav?.classList.remove('is-menu-open');
++    document.documentElement.classList.remove('no-scroll');
++    if (main) main.removeAttribute('inert');
++    // Colapsa submenús abiertos al cerrar el drawer
++    drawer.querySelectorAll('[aria-expanded="true"]').forEach(b => {
++      if (b !== toggle) b.setAttribute('aria-expanded', 'false');
++    });
++    toggle.focus();
++  };
++
++
++  // === 4) SUBMENÚS (accordion) ==============================================
++  // Cualquier .menu-drawer-link con aria-expanded actúa como toggle de su sublist.
++  drawer.querySelectorAll('.menu-drawer-link[aria-expanded]').forEach(btn => {
++    btn.addEventListener('click', (e) => {
++      if (mqDesktop.matches) return;          // en desktop el drawer está oculto
++      e.preventDefault();
++      const expanded = btn.getAttribute('aria-expanded') === 'true';
++      btn.setAttribute('aria-expanded', String(!expanded));
++    });
++  });
++
++
++  // === 5) LISTENERS ==========================================================
++
++  toggle.addEventListener('click', () => isOpen() ? close() : open());
++
++  // Escape cierra; Tab queda atrapado dentro del drawer.
++  document.addEventListener('keydown', e => {
++    if (!isOpen()) return;
++    if (e.key === 'Escape') { close(); return; }
++    if (e.key === 'Tab') {
++      const list = [...focusables()];
++      if (!list.length) return;
++      const first = list[0];
++      const last  = list[list.length - 1];
++      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
++      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
++    }
++  });
++
++  // Click en un link "hoja" (sin submenu) cierra el drawer.
++  drawer.addEventListener('click', e => {
++    const a = e.target.closest('a');
++    if (a && !mqDesktop.matches) close();
++  });
++
++  // Si el usuario cambia a desktop con el drawer abierto, limpia estado.
++  mqDesktop.addEventListener('change', e => {
++    if (e.matches && isOpen()) close();
++  });
++})();
+diff -urN '--exclude=.git' /tmp/w2/assets/js/menu.js /tmp/w2-serve/assets/js/menu.js
+--- /tmp/w2/assets/js/menu.js	2026-04-25 23:54:19.349796319 +0000
++++ /tmp/w2-serve/assets/js/menu.js	1970-01-01 00:00:00.000000000 +0000
+@@ -1,109 +0,0 @@
+-/* ==========================================================================
+-   MENU.JS — drawer full-screen mobile + accordion submenús
+-   --------------------------------------------------------------------------
+-   · Toggle por hamburguesa.
+-   · Cierra con: Escape, click en link sin submenu (mobile), cambio a desktop.
+-   · Submenús accordion: click en .menu-link[aria-expanded] togglea expanded.
+-   · Focus trap mientras está abierto.
+-   · Bloquea scroll del body con .no-scroll en <html>.
+-   · Aplica inert al <main>.
+-   · Marca .is-menu-open en el .nav (override de .is-hidden y transparencia).
+-
+-   Secciones (Ctrl+F):
+-     1) ELEMENTOS Y CONFIG
+-     2) HELPERS (isOpen, focusables)
+-     3) OPEN / CLOSE
+-     4) SUBMENÚS (accordion)
+-     5) LISTENERS
+-   ========================================================================== */
+-
+-(() => {
+-
+-  // === 1) ELEMENTOS Y CONFIG =================================================
+-  const toggle  = document.querySelector('.nav-toggle');
+-  const menu    = document.querySelector('.menu');
+-  const main    = document.querySelector('main');
+-  const nav     = document.querySelector('.nav');
+-
+-  if (!toggle || !menu) return;
+-
+-  const mqDesktop = matchMedia('(min-width: 960px)');
+-
+-
+-  // === 2) HELPERS ============================================================
+-  const isOpen = () => menu.classList.contains('is-open');
+-
+-  // Lista de elementos enfocables visibles dentro del menú (focus trap).
+-  const focusables = () => menu.querySelectorAll(
+-    'a, button, [tabindex]:not([tabindex="-1"])'
+-  );
+-
+-
+-  // === 3) OPEN / CLOSE =======================================================
+-  const open = () => {
+-    toggle.classList.add('is-active');
+-    toggle.setAttribute('aria-expanded', 'true');
+-    menu.classList.add('is-open');
+-    nav?.classList.add('is-menu-open');
+-    document.documentElement.classList.add('no-scroll');
+-    if (main) main.setAttribute('inert', '');
+-    focusables()[0]?.focus();
+-  };
+-
+-  const close = () => {
+-    toggle.classList.remove('is-active');
+-    toggle.setAttribute('aria-expanded', 'false');
+-    menu.classList.remove('is-open');
+-    nav?.classList.remove('is-menu-open');
+-    document.documentElement.classList.remove('no-scroll');
+-    if (main) main.removeAttribute('inert');
+-    // Colapsa cualquier submenu abierto al cerrar
+-    menu.querySelectorAll('[aria-expanded="true"]').forEach(b => {
+-      if (b !== toggle) b.setAttribute('aria-expanded', 'false');
+-    });
+-    toggle.focus();
+-  };
+-
+-
+-  // === 4) SUBMENÚS (accordion) ==============================================
+-  // Cualquier .menu-link con aria-expanded actúa como toggle de su sublist.
+-  // Solo aplica en mobile (en desktop el CSS oculta los sublists).
+-  menu.querySelectorAll('.menu-link[aria-expanded]').forEach(btn => {
+-    btn.addEventListener('click', (e) => {
+-      if (mqDesktop.matches) return;          // en desktop, no es accordion
+-      e.preventDefault();
+-      const expanded = btn.getAttribute('aria-expanded') === 'true';
+-      btn.setAttribute('aria-expanded', String(!expanded));
+-    });
+-  });
+-
+-
+-  // === 5) LISTENERS ==========================================================
+-
+-  toggle.addEventListener('click', () => isOpen() ? close() : open());
+-
+-  // Escape cierra; Tab queda atrapado dentro del menú.
+-  document.addEventListener('keydown', e => {
+-    if (!isOpen()) return;
+-    if (e.key === 'Escape') { close(); return; }
+-    if (e.key === 'Tab') {
+-      const list = [...focusables()];
+-      if (!list.length) return;
+-      const first = list[0];
+-      const last  = list[list.length - 1];
+-      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+-      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+-    }
+-  });
+-
+-  // Click en un link "hoja" (sin submenu) cierra el menú en mobile.
+-  menu.addEventListener('click', e => {
+-    const a = e.target.closest('a');
+-    if (a && !mqDesktop.matches) close();
+-  });
+-
+-  // Si el usuario cambia a desktop con el menú abierto, limpia estado.
+-  mqDesktop.addEventListener('change', e => {
+-    if (e.matches && isOpen()) close();
+-  });
+-})();
 diff -urN '--exclude=.git' /tmp/w2/index.html /tmp/w2-serve/index.html
---- /tmp/w2/index.html	2026-04-25 17:50:16.860867485 +0000
-+++ /tmp/w2-serve/index.html	2026-04-25 22:19:15.453993796 +0000
-@@ -10,18 +10,18 @@
+--- /tmp/w2/index.html	2026-04-25 23:54:19.349796319 +0000
++++ /tmp/w2-serve/index.html	2026-04-26 00:00:24.493993647 +0000
+@@ -10,27 +10,34 @@
    <!-- CSS modular (se concatenará en producción).
         NOTA: actualizar el ?v=X.Y.Z cuando se cambia --version en tokens.css
         para invalidar caches de navegador y CDN de GitHub Pages. -->
@@ -121,30 +775,226 @@ diff -urN '--exclude=.git' /tmp/w2/index.html /tmp/w2-serve/index.html
 -  <link rel="stylesheet" href="assets/css/components/hero.css?v=0.4.5">
 -  <link rel="stylesheet" href="assets/css/components/card.css?v=0.4.5">
 -  <link rel="stylesheet" href="assets/css/debug.css?v=0.4.5">
-+  <link rel="stylesheet" href="assets/css/tokens.css?v=0.4.6">
-+  <link rel="stylesheet" href="assets/css/reset.css?v=0.4.6">
-+  <link rel="stylesheet" href="assets/css/base.css?v=0.4.6">
-+  <link rel="stylesheet" href="assets/css/layout/container.css?v=0.4.6">
-+  <link rel="stylesheet" href="assets/css/layout/grid.css?v=0.4.6">
-+  <link rel="stylesheet" href="assets/css/layout/split.css?v=0.4.6">
-+  <link rel="stylesheet" href="assets/css/components/nav.css?v=0.4.6">
-+  <link rel="stylesheet" href="assets/css/components/menu.css?v=0.4.6">
-+  <link rel="stylesheet" href="assets/css/components/button.css?v=0.4.6">
-+  <link rel="stylesheet" href="assets/css/components/hero.css?v=0.4.6">
-+  <link rel="stylesheet" href="assets/css/components/card.css?v=0.4.6">
-+  <link rel="stylesheet" href="assets/css/debug.css?v=0.4.6">
++  <link rel="stylesheet" href="assets/css/tokens.css?v=0.5.0">
++  <link rel="stylesheet" href="assets/css/reset.css?v=0.5.0">
++  <link rel="stylesheet" href="assets/css/base.css?v=0.5.0">
++  <link rel="stylesheet" href="assets/css/layout/container.css?v=0.5.0">
++  <link rel="stylesheet" href="assets/css/layout/grid.css?v=0.5.0">
++  <link rel="stylesheet" href="assets/css/layout/split.css?v=0.5.0">
++  <link rel="stylesheet" href="assets/css/components/nav.css?v=0.5.0">
++  <link rel="stylesheet" href="assets/css/components/menu-bar.css?v=0.5.0">
++  <link rel="stylesheet" href="assets/css/components/menu-drawer.css?v=0.5.0">
++  <link rel="stylesheet" href="assets/css/components/button.css?v=0.5.0">
++  <link rel="stylesheet" href="assets/css/components/hero.css?v=0.5.0">
++  <link rel="stylesheet" href="assets/css/components/card.css?v=0.5.0">
++  <link rel="stylesheet" href="assets/css/debug.css?v=0.5.0">
  </head>
  
  <!-- class="debug" activa los bordes/badges de desarrollo. Quitar para producción. -->
-@@ -290,8 +290,8 @@
+ <body class="debug">
+ 
++<!-- =====================================================================
++     HEADER. Contiene branding (logo), controles globales (hamb, WhatsApp)
++     y el .menu-bar horizontal para desktop. El drawer mobile vive FUERA
++     (siguiente bloque) — ver nota de stacking en nav.css.
++     ===================================================================== -->
+ <header class="nav nav-over-hero">
+   <div class="container nav-inner">
+ 
+-    <button class="nav-toggle" aria-label="Abrir menú" aria-controls="menu" aria-expanded="false">
++    <button class="nav-toggle" aria-label="Abrir menú"
++            aria-controls="menu-drawer" aria-expanded="false">
+       <span></span><span></span><span></span>
+     </button>
+ 
+@@ -55,80 +62,20 @@
+     </a>
+ 
+     <!-- =====================================================================
+-         MENU. Mobile: full-screen overlay (controla menu.css + menu.js).
+-         Desktop ≥960px: el <ul> sube al grid del nav-inner via display:contents.
+-         Submenús: <button class="menu-link" aria-expanded="false"> + chevron.
+-         Items "hoja": <a class="menu-link">.
+-         Footer (mobile only): redes sociales + CTA.
++         MENU-BAR. Solo desktop ≥960px. display:contents hace que el <ul>
++         suba al grid del .nav-inner (auto 1fr auto). Sin submenús ni footer
++         aquí — esos viven en el .menu-drawer (mobile). Para añadir dropdowns
++         en hover, ver TODO al final de menu-bar.css.
+          ===================================================================== -->
+-    <nav id="menu" class="menu" aria-label="Principal">
+-      <ul class="menu-list">
+-        <li><a class="menu-link" href="#" aria-current="page">Inicio</a></li>
+-
+-        <li>
+-          <button type="button" class="menu-link" aria-expanded="false" aria-controls="sub-productos">
+-            <span>Productos</span>
+-            <svg class="menu-chevron" viewBox="0 0 12 12" aria-hidden="true">
+-              <path d="M2.5 4 L6 7.5 L9.5 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+-            </svg>
+-          </button>
+-          <div class="menu-sublist" id="sub-productos">
+-            <ul>
+-              <li><a href="#">Pizarras interactivas</a></li>
+-              <li><a href="#">Pantallas 4K UHD</a></li>
+-              <li><a href="#">Soportes y accesorios</a></li>
+-            </ul>
+-          </div>
+-        </li>
+-
+-        <li>
+-          <button type="button" class="menu-link" aria-expanded="false" aria-controls="sub-soluciones">
+-            <span>Soluciones</span>
+-            <svg class="menu-chevron" viewBox="0 0 12 12" aria-hidden="true">
+-              <path d="M2.5 4 L6 7.5 L9.5 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+-            </svg>
+-          </button>
+-          <div class="menu-sublist" id="sub-soluciones">
+-            <ul>
+-              <li><a href="#">Educación</a></li>
+-              <li><a href="#">Salas de juntas</a></li>
+-              <li><a href="#">Capacitación corporativa</a></li>
+-            </ul>
+-          </div>
+-        </li>
+-
+-        <li><a class="menu-link" href="#">Nosotros</a></li>
+-        <li><a class="menu-link" href="#">FAQ</a></li>
+-        <li><a class="menu-link" href="#">Contacto</a></li>
++    <nav class="menu-bar" aria-label="Principal (desktop)">
++      <ul class="menu-bar-list">
++        <li><a class="menu-bar-link" href="#" aria-current="page">Inicio</a></li>
++        <li><a class="menu-bar-link" href="#">Productos</a></li>
++        <li><a class="menu-bar-link" href="#">Soluciones</a></li>
++        <li><a class="menu-bar-link" href="#">Nosotros</a></li>
++        <li><a class="menu-bar-link" href="#">FAQ</a></li>
++        <li><a class="menu-bar-link" href="#">Contacto</a></li>
+       </ul>
+-
+-      <!-- Footer del menú (mobile only) -->
+-      <div class="menu-footer">
+-        <ul class="menu-social" aria-label="Redes sociales">
+-          <li><a href="#" aria-label="Instagram">
+-            <svg viewBox="0 0 24 24" aria-hidden="true">
+-              <path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.42.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41a3.7 3.7 0 0 1-1.38-.9 3.7 3.7 0 0 1-.9-1.38c-.16-.42-.36-1.06-.41-2.23C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.06-.36 2.23-.41C8.42 2.17 8.8 2.16 12 2.16Zm0 1.62c-3.15 0-3.5.01-4.74.07-1.07.05-1.65.23-2.04.38a3.5 3.5 0 0 0-1.27.82 3.5 3.5 0 0 0-.82 1.27c-.15.39-.33.97-.38 2.04-.06 1.24-.07 1.59-.07 4.64s.01 3.4.07 4.64c.05 1.07.23 1.65.38 2.04.2.5.45.86.82 1.27.4.4.77.62 1.27.82.39.15.97.33 2.04.38 1.24.06 1.59.07 4.74.07s3.5-.01 4.74-.07c1.07-.05 1.65-.23 2.04-.38.5-.2.86-.45 1.27-.82.4-.4.62-.77.82-1.27.15-.39.33-.97.38-2.04.06-1.24.07-1.59.07-4.64s-.01-3.4-.07-4.64c-.05-1.07-.23-1.65-.38-2.04a3.5 3.5 0 0 0-.82-1.27 3.5 3.5 0 0 0-1.27-.82c-.39-.15-.97-.33-2.04-.38-1.24-.06-1.59-.07-4.74-.07Zm0 2.76a5.46 5.46 0 1 1 0 10.92 5.46 5.46 0 0 1 0-10.92Zm0 9a3.54 3.54 0 1 0 0-7.08 3.54 3.54 0 0 0 0 7.08Zm6.95-9.22a1.27 1.27 0 1 1-2.55 0 1.27 1.27 0 0 1 2.55 0Z"/>
+-            </svg>
+-          </a></li>
+-          <li><a href="#" aria-label="Facebook">
+-            <svg viewBox="0 0 24 24" aria-hidden="true">
+-              <path d="M22 12.07C22 6.51 17.52 2 12 2S2 6.51 2 12.07c0 5.02 3.66 9.18 8.44 9.93v-7.02H7.9v-2.91h2.54V9.85c0-2.52 1.49-3.91 3.78-3.91 1.1 0 2.24.2 2.24.2v2.48h-1.26c-1.24 0-1.63.78-1.63 1.57v1.88h2.78l-.44 2.91h-2.34V22c4.78-.75 8.43-4.91 8.43-9.93Z"/>
+-            </svg>
+-          </a></li>
+-          <li><a href="#" aria-label="YouTube">
+-            <svg viewBox="0 0 24 24" aria-hidden="true">
+-              <path d="M23.5 6.51a3 3 0 0 0-2.11-2.12C19.5 3.86 12 3.86 12 3.86s-7.5 0-9.39.53A3 3 0 0 0 .5 6.51C0 8.42 0 12 0 12s0 3.58.5 5.49a3 3 0 0 0 2.11 2.12C4.5 20.14 12 20.14 12 20.14s7.5 0 9.39-.53a3 3 0 0 0 2.11-2.12C24 15.58 24 12 24 12s0-3.58-.5-5.49ZM9.6 15.57V8.43L15.82 12 9.6 15.57Z"/>
+-            </svg>
+-          </a></li>
+-          <li><a href="https://wa.me/" target="_blank" rel="noopener" aria-label="WhatsApp">
+-            <svg viewBox="0 0 24 24" aria-hidden="true">
+-              <path d="M20.5 3.49A11.88 11.88 0 0 0 12.04 0C5.46 0 .1 5.36.1 11.95a11.88 11.88 0 0 0 1.6 5.97L0 24l6.34-1.66a11.96 11.96 0 0 0 5.7 1.45h.01c6.59 0 11.95-5.36 11.95-11.95 0-3.19-1.24-6.19-3.5-8.45ZM12.04 21.88a9.93 9.93 0 0 1-5.06-1.38l-.36-.22-3.76.99 1-3.66-.24-.38a9.9 9.9 0 0 1-1.52-5.29c0-5.47 4.46-9.93 9.94-9.93a9.86 9.86 0 0 1 7.02 2.91 9.88 9.88 0 0 1 2.91 7.02c0 5.48-4.46 9.94-9.93 9.94Zm5.45-7.44c-.3-.15-1.77-.87-2.04-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.95 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.18-.3-.02-.46.13-.61.14-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.62-.92-2.22-.24-.58-.48-.5-.67-.51-.17 0-.37 0-.57 0s-.52.07-.8.37c-.27.3-1.04 1.02-1.04 2.49s1.07 2.89 1.22 3.09c.15.2 2.1 3.21 5.1 4.5.71.31 1.26.49 1.7.63.71.23 1.36.2 1.88.12.57-.09 1.76-.72 2.01-1.42.25-.7.25-1.29.17-1.42-.07-.12-.27-.2-.57-.35Z"/>
+-            </svg>
+-          </a></li>
+-        </ul>
+-
+-        <a class="btn btn-primary btn-icon menu-cta" href="https://wa.me/">Cotizar por WhatsApp</a>
+-      </div>
+     </nav>
+ 
+     <div class="nav-right">
+@@ -143,6 +90,85 @@
+   </div>
+ </header>
+ 
++
++<!-- =====================================================================
++     MENU-DRAWER. Overlay fullscreen para mobile (<960px). Es HERMANO del
++     header (no descendiente) a propósito — anidarlo crearía un containing
++     block en el header que atraparía su position:fixed y rompería z-index
++     entre el drawer y la X / logo / WhatsApp del header.
++     Su z-index (--z-menu = 900) es menor que el del .nav (1000) para que
++     el header pinte encima cuando el drawer abre — ver menu-drawer.css.
++     ===================================================================== -->
++<nav id="menu-drawer" class="menu-drawer" aria-label="Principal (mobile)">
++  <ul class="menu-drawer-list">
++    <li><a class="menu-drawer-link" href="#" aria-current="page">Inicio</a></li>
++
++    <li>
++      <button type="button" class="menu-drawer-link" aria-expanded="false" aria-controls="sub-productos">
++        <span>Productos</span>
++        <svg class="menu-drawer-chevron" viewBox="0 0 12 12" aria-hidden="true">
++          <path d="M2.5 4 L6 7.5 L9.5 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
++        </svg>
++      </button>
++      <div class="menu-drawer-sublist" id="sub-productos">
++        <ul>
++          <li><a href="#">Pizarras interactivas</a></li>
++          <li><a href="#">Pantallas 4K UHD</a></li>
++          <li><a href="#">Soportes y accesorios</a></li>
++        </ul>
++      </div>
++    </li>
++
++    <li>
++      <button type="button" class="menu-drawer-link" aria-expanded="false" aria-controls="sub-soluciones">
++        <span>Soluciones</span>
++        <svg class="menu-drawer-chevron" viewBox="0 0 12 12" aria-hidden="true">
++          <path d="M2.5 4 L6 7.5 L9.5 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
++        </svg>
++      </button>
++      <div class="menu-drawer-sublist" id="sub-soluciones">
++        <ul>
++          <li><a href="#">Educación</a></li>
++          <li><a href="#">Salas de juntas</a></li>
++          <li><a href="#">Capacitación corporativa</a></li>
++        </ul>
++      </div>
++    </li>
++
++    <li><a class="menu-drawer-link" href="#">Nosotros</a></li>
++    <li><a class="menu-drawer-link" href="#">FAQ</a></li>
++    <li><a class="menu-drawer-link" href="#">Contacto</a></li>
++  </ul>
++
++  <div class="menu-drawer-footer">
++    <ul class="menu-drawer-social" aria-label="Redes sociales">
++      <li><a href="#" aria-label="Instagram">
++        <svg viewBox="0 0 24 24" aria-hidden="true">
++          <path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.42.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41a3.7 3.7 0 0 1-1.38-.9 3.7 3.7 0 0 1-.9-1.38c-.16-.42-.36-1.06-.41-2.23C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.06-.36 2.23-.41C8.42 2.17 8.8 2.16 12 2.16Zm0 1.62c-3.15 0-3.5.01-4.74.07-1.07.05-1.65.23-2.04.38a3.5 3.5 0 0 0-1.27.82 3.5 3.5 0 0 0-.82 1.27c-.15.39-.33.97-.38 2.04-.06 1.24-.07 1.59-.07 4.64s.01 3.4.07 4.64c.05 1.07.23 1.65.38 2.04.2.5.45.86.82 1.27.4.4.77.62 1.27.82.39.15.97.33 2.04.38 1.24.06 1.59.07 4.74.07s3.5-.01 4.74-.07c1.07-.05 1.65-.23 2.04-.38.5-.2.86-.45 1.27-.82.4-.4.62-.77.82-1.27.15-.39.33-.97.38-2.04.06-1.24.07-1.59.07-4.64s-.01-3.4-.07-4.64c-.05-1.07-.23-1.65-.38-2.04a3.5 3.5 0 0 0-.82-1.27 3.5 3.5 0 0 0-1.27-.82c-.39-.15-.97-.33-2.04-.38-1.24-.06-1.59-.07-4.74-.07Zm0 2.76a5.46 5.46 0 1 1 0 10.92 5.46 5.46 0 0 1 0-10.92Zm0 9a3.54 3.54 0 1 0 0-7.08 3.54 3.54 0 0 0 0 7.08Zm6.95-9.22a1.27 1.27 0 1 1-2.55 0 1.27 1.27 0 0 1 2.55 0Z"/>
++        </svg>
++      </a></li>
++      <li><a href="#" aria-label="Facebook">
++        <svg viewBox="0 0 24 24" aria-hidden="true">
++          <path d="M22 12.07C22 6.51 17.52 2 12 2S2 6.51 2 12.07c0 5.02 3.66 9.18 8.44 9.93v-7.02H7.9v-2.91h2.54V9.85c0-2.52 1.49-3.91 3.78-3.91 1.1 0 2.24.2 2.24.2v2.48h-1.26c-1.24 0-1.63.78-1.63 1.57v1.88h2.78l-.44 2.91h-2.34V22c4.78-.75 8.43-4.91 8.43-9.93Z"/>
++        </svg>
++      </a></li>
++      <li><a href="#" aria-label="YouTube">
++        <svg viewBox="0 0 24 24" aria-hidden="true">
++          <path d="M23.5 6.51a3 3 0 0 0-2.11-2.12C19.5 3.86 12 3.86 12 3.86s-7.5 0-9.39.53A3 3 0 0 0 .5 6.51C0 8.42 0 12 0 12s0 3.58.5 5.49a3 3 0 0 0 2.11 2.12C4.5 20.14 12 20.14 12 20.14s7.5 0 9.39-.53a3 3 0 0 0 2.11-2.12C24 15.58 24 12 24 12s0-3.58-.5-5.49ZM9.6 15.57V8.43L15.82 12 9.6 15.57Z"/>
++        </svg>
++      </a></li>
++      <li><a href="https://wa.me/" target="_blank" rel="noopener" aria-label="WhatsApp">
++        <svg viewBox="0 0 24 24" aria-hidden="true">
++          <path d="M20.5 3.49A11.88 11.88 0 0 0 12.04 0C5.46 0 .1 5.36.1 11.95a11.88 11.88 0 0 0 1.6 5.97L0 24l6.34-1.66a11.96 11.96 0 0 0 5.7 1.45h.01c6.59 0 11.95-5.36 11.95-11.95 0-3.19-1.24-6.19-3.5-8.45ZM12.04 21.88a9.93 9.93 0 0 1-5.06-1.38l-.36-.22-3.76.99 1-3.66-.24-.38a9.9 9.9 0 0 1-1.52-5.29c0-5.47 4.46-9.93 9.94-9.93a9.86 9.86 0 0 1 7.02 2.91 9.88 9.88 0 0 1 2.91 7.02c0 5.48-4.46 9.94-9.93 9.94Zm5.45-7.44c-.3-.15-1.77-.87-2.04-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.95 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.18-.3-.02-.46.13-.61.14-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.62-.92-2.22-.24-.58-.48-.5-.67-.51-.17 0-.37 0-.57 0s-.52.07-.8.37c-.27.3-1.04 1.02-1.04 2.49s1.07 2.89 1.22 3.09c.15.2 2.1 3.21 5.1 4.5.71.31 1.26.49 1.7.63.71.23 1.36.2 1.88.12.57-.09 1.76-.72 2.01-1.42.25-.7.25-1.29.17-1.42-.07-.12-.27-.2-.57-.35Z"/>
++        </svg>
++      </a></li>
++    </ul>
++
++    <a class="btn btn-primary btn-icon menu-drawer-cta" href="https://wa.me/">Cotizar por WhatsApp</a>
++  </div>
++</nav>
++
++
+ <main>
+ 
+   <!-- =====================================================================
+@@ -290,8 +316,8 @@
  
  </main>
  
 -<script src="assets/js/nav-scroll.js?v=0.4.5" defer></script>
 -<script src="assets/js/menu.js?v=0.4.5" defer></script>
 -<script src="assets/js/hero.js?v=0.4.5" defer></script>
-+<script src="assets/js/nav-scroll.js?v=0.4.6" defer></script>
-+<script src="assets/js/menu.js?v=0.4.6" defer></script>
-+<script src="assets/js/hero.js?v=0.4.6" defer></script>
++<script src="assets/js/nav-scroll.js?v=0.5.0" defer></script>
++<script src="assets/js/menu-drawer.js?v=0.5.0" defer></script>
++<script src="assets/js/hero.js?v=0.5.0" defer></script>
  </body>
  </html>
