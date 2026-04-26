@@ -1,0 +1,153 @@
+/* ==========================================================================
+   TOKENS - Variables globales del sitio
+   --------------------------------------------------------------------------
+   Breakpoints — definidos como custom props (--bp-*) Y como números crudos
+   en los @media (las custom props no funcionan dentro de @media). El JS los
+   lee desde estas custom props vía getComputedStyle, así hay UNA sola fuente
+   de verdad para JS y comentarios; los @media siguen hardcoded pero llevan
+   comentario "/* var(--bp-X) */" al lado para sincronizar a ojo.
+       --bp-md:  768px   (tablet)
+       --bp-nav: 960px   (el nav cambia a horizontal aquí)
+       --bp-lg:  1024px  (desktop)
+       --bp-xl:  1280px  (desktop amplio)
+   ========================================================================== */
+
+@layer tokens {
+
+:root{
+  /* Versión (mostrada en el badge de debug y en el ?v=X.Y.Z de los assets) */
+  --version: "v0.5.5";
+
+  /* Breakpoints — leídos por JS, documentados aquí. Mantener sincronizados
+     con los @media (tienen comentario referenciando esta var al lado). */
+  --bp-md:  768px;
+  --bp-nav: 960px;
+  --bp-lg:  1024px;
+  --bp-xl:  1280px;
+
+  /* Colores base */
+  --c-bg:        #ffffff;
+  --c-text:      #111111;
+  --c-text-soft: #6b6b6b;
+  --c-border:    #e4e7ec;
+  --c-accent:    #ffdd00;
+  --c-overlay:   rgba(0,0,0,.45);
+
+  /* Colores "on dark" — para texto/superficies sobre fondo themed oscuro.
+     Antes vivían como rgba sueltos en hero.css (review #2). */
+  --c-on-dark:        rgba(255,255,255,.95);  /* fill de la barra activa */
+  --c-on-dark-soft:   rgba(255,255,255,.72);  /* texto secundario */
+  --c-on-dark-mute:   rgba(255,255,255,.28);  /* track de barra inactiva */
+  --c-on-dark-hover:  rgba(255,255,255,.15);  /* hover sutil sobre dark */
+
+  /* Viñetas / drop-shadows del hero */
+  --c-vignette:      rgba(0,0,0,.28);   /* gradient de los slides */
+  --c-shadow-media:  rgba(0,0,0,.40);   /* drop-shadow del SVG/img */
+
+  /* Tipografía: stack tipo Insta360 (Helvetica → Arial → system) sin webfont */
+  --font: "Helvetica Neue", Helvetica, Arial, system-ui, -apple-system, sans-serif;
+
+  /* Escala tipográfica (consumida por hero, cards, features...) */
+  --fs-eyebrow: clamp(11px, .4vw + 10px, 13px);
+  --fs-title:   clamp(2rem, 4vw + 1rem, 3.75rem);
+  --fs-sub:     clamp(1rem, .5vw + .9rem, 1.25rem);
+  --fs-body:    1rem;
+  --fs-small:   .875rem;
+  /* Tamaños específicos del menú: el bar (desktop) usa más compacto que el
+     body porque vive en una barra de 64px; el drawer (mobile) usa más
+     grande para tap targets cómodos. */
+  --fs-menu-bar:    14px;
+  --fs-menu-drawer: 17px;
+  --fw-regular: 400;
+  --fw-medium:  500;
+  --fw-bold:    700;
+  --lh-tight: 1.1;
+  --lh-base:  1.5;
+  --ls-eyebrow: .08em;
+
+  /* Escala de espaciado (4px base) */
+  --sp-1:  4px;
+  --sp-2:  8px;
+  --sp-3:  12px;
+  --sp-4:  16px;
+  --sp-5:  20px;
+  --sp-6:  24px;
+  --sp-8:  32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+
+  /* Layout */
+  --container-max: 1200px;
+  --container-pad: 24px;
+  --gap: 20px;
+
+  /* Nav */
+  --nav-h:  64px;
+  --nav-bg: var(--c-bg);
+  --shadow-nav: 0 1px 0 rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.04);
+  --logo-h: 28px;     /* alto visual del logo SVG en el header */
+
+  /* Hero / slider */
+  --hero-h:    clamp(560px, 82vh, 780px);
+  --slide-dur: 5s;
+  --slide-fade: .6s;
+
+  /* Botones */
+  --btn-r: 999px;
+
+  /* Radios */
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 16px;
+
+  /* Sombras */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.08);
+
+  /* ---- Z-INDEX SCALE ------------------------------------------------------
+     Escala semántica con huecos de 100 para que cualquier futuro componente
+     encaje sin renumerar todo. Reglas:
+       · NUNCA usar z-index numérico fuera de aquí.
+       · El header (--z-nav) queda ENCIMA del drawer mobile a propósito:
+         así el botón X y el logo siguen visibles cuando el menú está abierto.
+       · --z-modal queda por encima de TODO menos toast/debug, para diálogos
+         que sí deben tapar el header.
+     -------------------------------------------------------------------- */
+  --z-base:   0;
+  --z-nav:    100;   /* header fijo */
+  --z-drawer:  90;   /* mobile drawer (debajo del nav, ver regla arriba) */
+  --z-modal:  200;   /* diálogos que SÍ tapan el nav */
+  --z-toast:  300;   /* notificaciones */
+  --z-debug:  400;   /* overlays de desarrollo */
+
+  /* Transiciones */
+  --t-fast: .15s ease;
+  --t-base: .25s ease;
+}
+
+/* ==========================================================================
+   THEMES - data-theme="..." define paleta para el slide/sección.
+   Cualquier descendiente puede consumir --bg-themed, --fg-themed, etc.
+   Reusable en hero, features, cards.
+   ========================================================================== */
+
+[data-theme="ink"] {
+  --bg-themed:      #0e1628;
+  --fg-themed:      #ffffff;
+  --fg-soft-themed: rgba(255,255,255,.72);
+  --accent-themed:  #ffdd00;
+}
+[data-theme="moss"] {
+  --bg-themed:      #1f2e21;
+  --fg-themed:      #ffffff;
+  --fg-soft-themed: rgba(255,255,255,.74);
+  --accent-themed:  #c8ff5a;
+}
+[data-theme="clay"] {
+  --bg-themed:      #ff3636;
+  --fg-themed:      #ffffff;
+  --fg-soft-themed: rgba(255,255,255,.74);
+  --accent-themed:  #ff7a59;
+}
+
+}
