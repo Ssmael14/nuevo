@@ -10,7 +10,7 @@
 
 :root{
   /* Versión (mostrada en el badge de debug y en el ?v=X.Y.Z de los assets) */
-  --version: "v0.5.3";
+  --version: "v0.5.4";
 
   /* Colores base */
   --c-bg:        #ffffff;
@@ -29,6 +29,11 @@
   --fs-sub:     clamp(1rem, .5vw + .9rem, 1.25rem);
   --fs-body:    1rem;
   --fs-small:   .875rem;
+  /* Tamaños específicos del menú: el bar (desktop) usa más compacto que el
+     body porque vive en una barra de 64px; el drawer (mobile) usa más
+     grande para tap targets cómodos. */
+  --fs-menu-bar:    14px;
+  --fs-menu-drawer: 17px;
   --fw-regular: 400;
   --fw-medium:  500;
   --fw-bold:    700;
@@ -56,6 +61,7 @@
   --nav-h:  64px;
   --nav-bg: var(--c-bg);
   --shadow-nav: 0 1px 0 rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.04);
+  --logo-h: 28px;     /* alto visual del logo SVG en el header */
 
   /* Hero / slider */
   --hero-h:    clamp(560px, 82vh, 780px);

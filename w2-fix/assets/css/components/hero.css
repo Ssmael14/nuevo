@@ -83,6 +83,13 @@
   transition: opacity var(--slide-fade) ease;
 }
 
+/* Snap-back tras soltar el drag. JS añade .is-snapping al slide activo,
+   le pone style.transform = '' y la transición usa el token --t-base.
+   Antes esto vivía como string inline en hero.js con la duración duplicada. */
+.hero-slide.is-snapping {
+  transition: transform var(--t-base);
+}
+
 /* Viñeta sutil para que la imagen no quede plana sobre el bg. */
 .hero-slide::before {
   content: "";

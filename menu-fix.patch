@@ -92,7 +92,7 @@ diff -urN '--exclude=.git' /tmp/w2/assets/css/components/card.css /tmp/w2-serve/
 +}
 diff -urN '--exclude=.git' /tmp/w2/assets/css/components/hero.css /tmp/w2-serve/assets/css/components/hero.css
 --- /tmp/w2/assets/css/components/hero.css	2026-04-25 23:54:19.347552539 +0000
-+++ /tmp/w2-serve/assets/css/components/hero.css	2026-04-26 00:05:19.361900357 +0000
++++ /tmp/w2-serve/assets/css/components/hero.css	2026-04-26 15:25:10.609379952 +0000
 @@ -21,6 +21,7 @@
      11) DESKTOP overrides (≥ 768px)
     ========================================================================== */
@@ -101,7 +101,21 @@ diff -urN '--exclude=.git' /tmp/w2/assets/css/components/hero.css /tmp/w2-serve/
  
  /* === 1) HERO container ===================================================== */
  
-@@ -266,3 +267,5 @@
+@@ -82,6 +83,13 @@
+   transition: opacity var(--slide-fade) ease;
+ }
+ 
++/* Snap-back tras soltar el drag. JS añade .is-snapping al slide activo,
++   le pone style.transform = '' y la transición usa el token --t-base.
++   Antes esto vivía como string inline en hero.js con la duración duplicada. */
++.hero-slide.is-snapping {
++  transition: transform var(--t-base);
++}
++
+ /* Viñeta sutil para que la imagen no quede plana sobre el bg. */
+ .hero-slide::before {
+   content: "";
+@@ -266,3 +274,5 @@
    .hero-sub                { margin-inline: 0; max-width: 32ch; }
    .hero-progress-item      { width: 56px; }
  }
@@ -109,7 +123,7 @@ diff -urN '--exclude=.git' /tmp/w2/assets/css/components/hero.css /tmp/w2-serve/
 +}
 diff -urN '--exclude=.git' /tmp/w2/assets/css/components/menu-bar.css /tmp/w2-serve/assets/css/components/menu-bar.css
 --- /tmp/w2/assets/css/components/menu-bar.css	1970-01-01 00:00:00.000000000 +0000
-+++ /tmp/w2-serve/assets/css/components/menu-bar.css	2026-04-26 13:57:43.043542357 +0000
++++ /tmp/w2-serve/assets/css/components/menu-bar.css	2026-04-26 15:24:46.285378506 +0000
 @@ -0,0 +1,82 @@
 +/* ==========================================================================
 +   MENU-BAR.CSS — barra horizontal de navegación (DESKTOP ≥960px)
@@ -157,7 +171,7 @@ diff -urN '--exclude=.git' /tmp/w2/assets/css/components/menu-bar.css /tmp/w2-se
 +    align-items: center;
 +    padding: var(--sp-2) 0;
 +    font: inherit;
-+    font-size: 14px;
++    font-size: var(--fs-menu-bar);
 +    font-weight: var(--fw-medium);
 +    color: inherit;
 +    background: transparent;
@@ -195,7 +209,7 @@ diff -urN '--exclude=.git' /tmp/w2/assets/css/components/menu-bar.css /tmp/w2-se
 +}
 diff -urN '--exclude=.git' /tmp/w2/assets/css/components/menu-drawer.css /tmp/w2-serve/assets/css/components/menu-drawer.css
 --- /tmp/w2/assets/css/components/menu-drawer.css	1970-01-01 00:00:00.000000000 +0000
-+++ /tmp/w2-serve/assets/css/components/menu-drawer.css	2026-04-26 13:57:51.727542873 +0000
++++ /tmp/w2-serve/assets/css/components/menu-drawer.css	2026-04-26 15:24:52.537378878 +0000
 @@ -0,0 +1,175 @@
 +/* ==========================================================================
 +   MENU-DRAWER.CSS — overlay fullscreen mobile (<960px)
@@ -267,7 +281,7 @@ diff -urN '--exclude=.git' /tmp/w2/assets/css/components/menu-drawer.css /tmp/w2
 +  gap: var(--sp-3);
 +  padding: var(--sp-4) var(--sp-5);
 +  font: inherit;
-+  font-size: 17px;
++  font-size: var(--fs-menu-drawer);
 +  font-weight: var(--fw-medium);
 +  color: inherit;
 +  text-align: left;
@@ -596,7 +610,7 @@ diff -urN '--exclude=.git' /tmp/w2/assets/css/components/menu.css /tmp/w2-serve/
 -}
 diff -urN '--exclude=.git' /tmp/w2/assets/css/components/nav.css /tmp/w2-serve/assets/css/components/nav.css
 --- /tmp/w2/assets/css/components/nav.css	2026-04-25 23:54:19.347552539 +0000
-+++ /tmp/w2-serve/assets/css/components/nav.css	2026-04-26 00:05:19.294710201 +0000
++++ /tmp/w2-serve/assets/css/components/nav.css	2026-04-26 15:24:41.089378197 +0000
 @@ -3,18 +3,33 @@
  
     Layout:
@@ -644,6 +658,15 @@ diff -urN '--exclude=.git' /tmp/w2/assets/css/components/nav.css /tmp/w2-serve/a
  
  /* === 1) BASE Y MODOS DE COLOR =============================================== */
  
+@@ -127,7 +143,7 @@
+   display: inline-flex; align-items: center;
+   color: inherit;
+ }
+-.nav-logo svg { height: 28px; width: auto; }
++.nav-logo svg { height: var(--logo-h); width: auto; }
+ 
+ 
+ /* === 6) RIGHT (versión debug + WhatsApp) =================================== */
 @@ -168,3 +184,5 @@
    .nav-logo   { justify-self: start; }
    .nav-inner  { gap: var(--sp-6); }
@@ -908,7 +931,7 @@ diff -urN '--exclude=.git' /tmp/w2/assets/css/reset.css /tmp/w2-serve/assets/css
 +}
 diff -urN '--exclude=.git' /tmp/w2/assets/css/tokens.css /tmp/w2-serve/assets/css/tokens.css
 --- /tmp/w2/assets/css/tokens.css	2026-04-25 23:54:19.348872024 +0000
-+++ /tmp/w2-serve/assets/css/tokens.css	2026-04-26 15:15:29.606175748 +0000
++++ /tmp/w2-serve/assets/css/tokens.css	2026-04-26 15:25:45.701634795 +0000
 @@ -6,9 +6,11 @@
       xl: 1280px  (desktop amplio)
     ========================================================================== */
@@ -918,11 +941,31 @@ diff -urN '--exclude=.git' /tmp/w2/assets/css/tokens.css /tmp/w2-serve/assets/cs
  :root{
    /* Versión (mostrada en el badge de debug y en el ?v=X.Y.Z de los assets) */
 -  --version: "v0.4.5";
-+  --version: "v0.5.3";
++  --version: "v0.5.4";
  
    /* Colores base */
    --c-bg:        #ffffff;
-@@ -106,3 +108,5 @@
+@@ -27,6 +29,11 @@
+   --fs-sub:     clamp(1rem, .5vw + .9rem, 1.25rem);
+   --fs-body:    1rem;
+   --fs-small:   .875rem;
++  /* Tamaños específicos del menú: el bar (desktop) usa más compacto que el
++     body porque vive en una barra de 64px; el drawer (mobile) usa más
++     grande para tap targets cómodos. */
++  --fs-menu-bar:    14px;
++  --fs-menu-drawer: 17px;
+   --fw-regular: 400;
+   --fw-medium:  500;
+   --fw-bold:    700;
+@@ -54,6 +61,7 @@
+   --nav-h:  64px;
+   --nav-bg: var(--c-bg);
+   --shadow-nav: 0 1px 0 rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.04);
++  --logo-h: 28px;     /* alto visual del logo SVG en el header */
+ 
+   /* Hero / slider */
+   --hero-h:    clamp(560px, 82vh, 780px);
+@@ -106,3 +114,5 @@
    --fg-soft-themed: rgba(255,255,255,.74);
    --accent-themed:  #ff7a59;
  }
@@ -930,7 +973,7 @@ diff -urN '--exclude=.git' /tmp/w2/assets/css/tokens.css /tmp/w2-serve/assets/cs
 +}
 diff -urN '--exclude=.git' /tmp/w2/assets/js/hero.js /tmp/w2-serve/assets/js/hero.js
 --- /tmp/w2/assets/js/hero.js	2026-04-25 23:54:19.348872024 +0000
-+++ /tmp/w2-serve/assets/js/hero.js	2026-04-26 15:13:58.768259021 +0000
++++ /tmp/w2-serve/assets/js/hero.js	2026-04-26 15:25:22.513380660 +0000
 @@ -38,7 +38,10 @@
  
    const total = slides.length;
@@ -943,7 +986,7 @@ diff -urN '--exclude=.git' /tmp/w2/assets/js/hero.js /tmp/w2-serve/assets/js/her
  
    if (totalEl) totalEl.textContent = String(total).padStart(2, '0');
  
-@@ -174,10 +177,16 @@
+@@ -174,10 +177,18 @@
      const slide = slides[current];
  
      hero.classList.remove('is-dragging');
@@ -953,13 +996,15 @@ diff -urN '--exclude=.git' /tmp/w2/assets/js/hero.js /tmp/w2-serve/assets/js/her
 -    setTimeout(() => { slide.style.transition = ''; }, 260);
 +
 +    // Respeta prefers-reduced-motion: snap-back instantáneo, sin animación.
++    // En modo normal, .is-snapping aplica transition: transform var(--t-base).
++    // Limpiamos la clase con transitionend (no necesitamos magic numbers).
 +    if (mqReduce.matches) {
 +      slide.style.transform = '';
 +    } else {
-+      // Pequeña transición de retorno; setActive() también limpia el transform.
-+      slide.style.transition = 'transform .25s ease';
-+      slide.style.transform  = '';
-+      setTimeout(() => { slide.style.transition = ''; }, 260);
++      slide.classList.add('is-snapping');
++      slide.style.transform = '';
++      const cleanup = () => slide.classList.remove('is-snapping');
++      slide.addEventListener('transitionend', cleanup, { once: true });
 +    }
  
      if (Math.abs(dx) > SWIPE_TH) (dx < 0 ? next : prev)();
@@ -1229,7 +1274,7 @@ diff -urN '--exclude=.git' /tmp/w2/assets/js/nav-scroll.js /tmp/w2-serve/assets/
  })();
 diff -urN '--exclude=.git' /tmp/w2/index.html /tmp/w2-serve/index.html
 --- /tmp/w2/index.html	2026-04-25 23:54:19.349796319 +0000
-+++ /tmp/w2-serve/index.html	2026-04-26 15:15:29.608709202 +0000
++++ /tmp/w2-serve/index.html	2026-04-26 15:25:45.703593447 +0000
 @@ -7,30 +7,55 @@
    <meta name="theme-color" content="#0e1628">
    <title>EduBoard — dev</title>
@@ -1267,19 +1312,19 @@ diff -urN '--exclude=.git' /tmp/w2/index.html /tmp/w2-serve/index.html
 -  <link rel="stylesheet" href="assets/css/components/hero.css?v=0.4.5">
 -  <link rel="stylesheet" href="assets/css/components/card.css?v=0.4.5">
 -  <link rel="stylesheet" href="assets/css/debug.css?v=0.4.5">
-+  <link rel="stylesheet" href="assets/css/tokens.css?v=0.5.3">
-+  <link rel="stylesheet" href="assets/css/reset.css?v=0.5.3">
-+  <link rel="stylesheet" href="assets/css/base.css?v=0.5.3">
-+  <link rel="stylesheet" href="assets/css/layout/container.css?v=0.5.3">
-+  <link rel="stylesheet" href="assets/css/layout/grid.css?v=0.5.3">
-+  <link rel="stylesheet" href="assets/css/layout/split.css?v=0.5.3">
-+  <link rel="stylesheet" href="assets/css/components/nav.css?v=0.5.3">
-+  <link rel="stylesheet" href="assets/css/components/menu-bar.css?v=0.5.3">
-+  <link rel="stylesheet" href="assets/css/components/menu-drawer.css?v=0.5.3">
-+  <link rel="stylesheet" href="assets/css/components/button.css?v=0.5.3">
-+  <link rel="stylesheet" href="assets/css/components/hero.css?v=0.5.3">
-+  <link rel="stylesheet" href="assets/css/components/card.css?v=0.5.3">
-+  <link rel="stylesheet" href="assets/css/debug.css?v=0.5.3">
++  <link rel="stylesheet" href="assets/css/tokens.css?v=0.5.4">
++  <link rel="stylesheet" href="assets/css/reset.css?v=0.5.4">
++  <link rel="stylesheet" href="assets/css/base.css?v=0.5.4">
++  <link rel="stylesheet" href="assets/css/layout/container.css?v=0.5.4">
++  <link rel="stylesheet" href="assets/css/layout/grid.css?v=0.5.4">
++  <link rel="stylesheet" href="assets/css/layout/split.css?v=0.5.4">
++  <link rel="stylesheet" href="assets/css/components/nav.css?v=0.5.4">
++  <link rel="stylesheet" href="assets/css/components/menu-bar.css?v=0.5.4">
++  <link rel="stylesheet" href="assets/css/components/menu-drawer.css?v=0.5.4">
++  <link rel="stylesheet" href="assets/css/components/button.css?v=0.5.4">
++  <link rel="stylesheet" href="assets/css/components/hero.css?v=0.5.4">
++  <link rel="stylesheet" href="assets/css/components/card.css?v=0.5.4">
++  <link rel="stylesheet" href="assets/css/debug.css?v=0.5.4">
  </head>
  
  <!-- class="debug" activa los bordes/badges de desarrollo. Quitar para producción. -->
@@ -1485,8 +1530,8 @@ diff -urN '--exclude=.git' /tmp/w2/index.html /tmp/w2-serve/index.html
 -<script src="assets/js/nav-scroll.js?v=0.4.5" defer></script>
 -<script src="assets/js/menu.js?v=0.4.5" defer></script>
 -<script src="assets/js/hero.js?v=0.4.5" defer></script>
-+<script src="assets/js/nav-scroll.js?v=0.5.3" defer></script>
-+<script src="assets/js/menu-drawer.js?v=0.5.3" defer></script>
-+<script src="assets/js/hero.js?v=0.5.3" defer></script>
++<script src="assets/js/nav-scroll.js?v=0.5.4" defer></script>
++<script src="assets/js/menu-drawer.js?v=0.5.4" defer></script>
++<script src="assets/js/hero.js?v=0.5.4" defer></script>
  </body>
  </html>

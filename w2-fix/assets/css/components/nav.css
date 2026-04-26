@@ -143,7 +143,7 @@
   display: inline-flex; align-items: center;
   color: inherit;
 }
-.nav-logo svg { height: 28px; width: auto; }
+.nav-logo svg { height: var(--logo-h); width: auto; }
 
 
 /* === 6) RIGHT (versión debug + WhatsApp) =================================== */

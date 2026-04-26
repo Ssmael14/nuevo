@@ -179,13 +179,15 @@
     hero.classList.remove('is-dragging');
 
     // Respeta prefers-reduced-motion: snap-back instantáneo, sin animación.
+    // En modo normal, .is-snapping aplica transition: transform var(--t-base).
+    // Limpiamos la clase con transitionend (no necesitamos magic numbers).
     if (mqReduce.matches) {
       slide.style.transform = '';
     } else {
-      // Pequeña transición de retorno; setActive() también limpia el transform.
-      slide.style.transition = 'transform .25s ease';
-      slide.style.transform  = '';
-      setTimeout(() => { slide.style.transition = ''; }, 260);
+      slide.classList.add('is-snapping');
+      slide.style.transform = '';
+      const cleanup = () => slide.classList.remove('is-snapping');
+      slide.addEventListener('transitionend', cleanup, { once: true });
     }
 
     if (Math.abs(dx) > SWIPE_TH) (dx < 0 ? next : prev)();

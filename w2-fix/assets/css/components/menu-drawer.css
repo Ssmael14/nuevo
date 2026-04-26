@@ -68,7 +68,7 @@
   gap: var(--sp-3);
   padding: var(--sp-4) var(--sp-5);
   font: inherit;
-  font-size: 17px;
+  font-size: var(--fs-menu-drawer);
   font-weight: var(--fw-medium);
   color: inherit;
   text-align: left;
