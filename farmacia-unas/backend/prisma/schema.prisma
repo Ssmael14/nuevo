@@ -1,0 +1,272 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+//  USUARIOS DEL SISTEMA (personal de farmacia)
+// ============================================================
+
+enum RolUsuario {
+  ADMIN
+  FARMACEUTICO
+  ALMACENERO
+  AUXILIAR
+}
+
+model Usuario {
+  id           String      @id @default(uuid())
+  nombres      String
+  apellidos    String
+  email        String      @unique
+  passwordHash String
+  rol          RolUsuario  @default(AUXILIAR)
+  activo       Boolean     @default(true)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  entregas     Entrega[]
+  ordenes      OrdenCompra[]
+
+  @@map("usuarios")
+}
+
+// ============================================================
+//  PACIENTES (alumnos, docentes, administrativos de la UNAS)
+// ============================================================
+
+enum TipoPaciente {
+  ALUMNO
+  DOCENTE
+  ADMINISTRATIVO
+}
+
+model Paciente {
+  id              String       @id @default(uuid())
+  codigo          String       @unique // codigo universitario / DNI
+  dni             String?      @unique
+  nombres         String
+  apellidos       String
+  tipo            TipoPaciente
+  facultad        String?
+  escuela         String?
+  telefono        String?
+  email           String?
+  fechaNacimiento DateTime?
+  activo          Boolean      @default(true)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  entregas        Entrega[]
+
+  @@index([apellidos, nombres])
+  @@map("pacientes")
+}
+
+// ============================================================
+//  CATALOGO DE MEDICAMENTOS
+// ============================================================
+
+model Categoria {
+  id           String        @id @default(uuid())
+  nombre       String        @unique
+  descripcion  String?
+  createdAt    DateTime      @default(now())
+
+  medicamentos Medicamento[]
+
+  @@map("categorias")
+}
+
+enum FormaFarmaceutica {
+  TABLETA
+  CAPSULA
+  JARABE
+  INYECTABLE
+  CREMA
+  SUSPENSION
+  GOTAS
+  SUPOSITORIO
+  OTRO
+}
+
+model Medicamento {
+  id                String            @id @default(uuid())
+  codigo            String            @unique
+  nombre            String
+  principioActivo   String?
+  concentracion     String?          // ej. "500 mg"
+  formaFarmaceutica FormaFarmaceutica @default(TABLETA)
+  presentacion      String?          // ej. "Caja x 100 tabletas"
+  requiereReceta    Boolean          @default(false)
+  stockMinimo       Int              @default(10)
+  activo            Boolean          @default(true)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  categoriaId       String?
+  categoria         Categoria?       @relation(fields: [categoriaId], references: [id])
+
+  lotes             Lote[]
+  detallesEntrega   DetalleEntrega[]
+  detallesOrden     DetalleOrdenCompra[]
+
+  @@index([nombre])
+  @@map("medicamentos")
+}
+
+// ============================================================
+//  INVENTARIO POR LOTES (con fecha de vencimiento)
+// ============================================================
+
+model Lote {
+  id              String     @id @default(uuid())
+  numeroLote      String
+  medicamentoId   String
+  medicamento     Medicamento @relation(fields: [medicamentoId], references: [id])
+
+  cantidadInicial Int
+  cantidadActual  Int
+  fechaIngreso    DateTime   @default(now())
+  fechaVencimiento DateTime
+  precioUnitario  Decimal?   @db.Decimal(10, 2) // referencia de compra
+
+  proveedorId     String?
+  proveedor       Proveedor? @relation(fields: [proveedorId], references: [id])
+
+  ordenCompraId   String?
+  ordenCompra     OrdenCompra? @relation(fields: [ordenCompraId], references: [id])
+
+  detallesEntrega DetalleEntrega[]
+
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@unique([medicamentoId, numeroLote])
+  @@index([fechaVencimiento])
+  @@map("lotes")
+}
+
+// ============================================================
+//  ENTREGAS DE MEDICAMENTOS (no son ventas)
+// ============================================================
+
+enum EstadoEntrega {
+  PENDIENTE
+  ENTREGADA
+  ANULADA
+}
+
+model Entrega {
+  id            String           @id @default(uuid())
+  numero        String           @unique // ej. ENT-2026-00001
+  fecha         DateTime         @default(now())
+  estado        EstadoEntrega    @default(ENTREGADA)
+  observaciones String?
+  diagnostico   String?
+  numeroReceta  String?
+
+  pacienteId    String
+  paciente      Paciente         @relation(fields: [pacienteId], references: [id])
+
+  usuarioId     String
+  usuario       Usuario          @relation(fields: [usuarioId], references: [id])
+
+  detalles      DetalleEntrega[]
+
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@index([fecha])
+  @@map("entregas")
+}
+
+model DetalleEntrega {
+  id            String      @id @default(uuid())
+  entregaId     String
+  entrega       Entrega     @relation(fields: [entregaId], references: [id], onDelete: Cascade)
+
+  medicamentoId String
+  medicamento   Medicamento @relation(fields: [medicamentoId], references: [id])
+
+  loteId        String
+  lote          Lote        @relation(fields: [loteId], references: [id])
+
+  cantidad      Int
+  indicaciones  String?
+
+  @@map("detalles_entrega")
+}
+
+// ============================================================
+//  PROVEEDORES Y ORDENES DE COMPRA
+// ============================================================
+
+model Proveedor {
+  id           String        @id @default(uuid())
+  ruc          String        @unique
+  razonSocial  String
+  nombreComercial String?
+  direccion    String?
+  telefono     String?
+  email        String?
+  contacto     String?
+  activo       Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  ordenes      OrdenCompra[]
+  lotes        Lote[]
+
+  @@map("proveedores")
+}
+
+enum EstadoOrdenCompra {
+  PENDIENTE
+  RECIBIDA
+  PARCIAL
+  ANULADA
+}
+
+model OrdenCompra {
+  id            String              @id @default(uuid())
+  numero        String              @unique // OC-2026-00001
+  fecha         DateTime            @default(now())
+  fechaRecepcion DateTime?
+  estado        EstadoOrdenCompra   @default(PENDIENTE)
+  total         Decimal             @default(0) @db.Decimal(12, 2)
+  observaciones String?
+
+  proveedorId   String
+  proveedor     Proveedor           @relation(fields: [proveedorId], references: [id])
+
+  usuarioId     String
+  usuario       Usuario             @relation(fields: [usuarioId], references: [id])
+
+  detalles      DetalleOrdenCompra[]
+  lotes         Lote[]
+
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@map("ordenes_compra")
+}
+
+model DetalleOrdenCompra {
+  id             String      @id @default(uuid())
+  ordenCompraId  String
+  ordenCompra    OrdenCompra @relation(fields: [ordenCompraId], references: [id], onDelete: Cascade)
+
+  medicamentoId  String
+  medicamento    Medicamento @relation(fields: [medicamentoId], references: [id])
+
+  cantidad       Int
+  precioUnitario Decimal     @db.Decimal(10, 2)
+  subtotal       Decimal     @db.Decimal(12, 2)
+
+  @@map("detalles_orden_compra")
+}

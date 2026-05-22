@@ -1,0 +1,30 @@
+# Dependencias
+node_modules/
+
+# Variables de entorno
+.env
+.env.local
+.env.*.local
+
+# Builds
+dist/
+build/
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editores
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Cobertura / tests
+coverage/
+
+# Prisma generado
+backend/prisma/migrations/dev.db*
