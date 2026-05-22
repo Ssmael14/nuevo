@@ -8,7 +8,7 @@ datasource db {
 }
 
 // ============================================================
-//  USUARIOS DEL SISTEMA (personal de farmacia)
+//  USUARIOS DEL SISTEMA
 // ============================================================
 
 enum RolUsuario {
@@ -31,12 +31,27 @@ model Usuario {
 
   entregas     Entrega[]
   ordenes      OrdenCompra[]
+  refreshTokens RefreshToken[]
+  auditLogs    AuditLog[]
 
   @@map("usuarios")
 }
 
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  usuarioId String
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([usuarioId])
+  @@map("refresh_tokens")
+}
+
 // ============================================================
-//  PACIENTES (alumnos, docentes, administrativos de la UNAS)
+//  PACIENTES
 // ============================================================
 
 enum TipoPaciente {
@@ -47,7 +62,7 @@ enum TipoPaciente {
 
 model Paciente {
   id              String       @id @default(uuid())
-  codigo          String       @unique // codigo universitario / DNI
+  codigo          String       @unique
   dni             String?      @unique
   nombres         String
   apellidos       String
@@ -99,9 +114,9 @@ model Medicamento {
   codigo            String            @unique
   nombre            String
   principioActivo   String?
-  concentracion     String?          // ej. "500 mg"
+  concentracion     String?
   formaFarmaceutica FormaFarmaceutica @default(TABLETA)
-  presentacion      String?          // ej. "Caja x 100 tabletas"
+  presentacion      String?
   requiereReceta    Boolean          @default(false)
   stockMinimo       Int              @default(10)
   activo            Boolean          @default(true)
@@ -120,7 +135,7 @@ model Medicamento {
 }
 
 // ============================================================
-//  INVENTARIO POR LOTES (con fecha de vencimiento)
+//  INVENTARIO POR LOTES
 // ============================================================
 
 model Lote {
@@ -133,7 +148,7 @@ model Lote {
   cantidadActual  Int
   fechaIngreso    DateTime   @default(now())
   fechaVencimiento DateTime
-  precioUnitario  Decimal?   @db.Decimal(10, 2) // referencia de compra
+  precioUnitario  Decimal?   @db.Decimal(10, 2)
 
   proveedorId     String?
   proveedor       Proveedor? @relation(fields: [proveedorId], references: [id])
@@ -152,18 +167,17 @@ model Lote {
 }
 
 // ============================================================
-//  ENTREGAS DE MEDICAMENTOS (no son ventas)
+//  ENTREGAS
 // ============================================================
 
 enum EstadoEntrega {
-  PENDIENTE
   ENTREGADA
   ANULADA
 }
 
 model Entrega {
   id            String           @id @default(uuid())
-  numero        String           @unique // ej. ENT-2026-00001
+  numero        String           @unique
   fecha         DateTime         @default(now())
   estado        EstadoEntrega    @default(ENTREGADA)
   observaciones String?
@@ -207,20 +221,20 @@ model DetalleEntrega {
 // ============================================================
 
 model Proveedor {
-  id           String        @id @default(uuid())
-  ruc          String        @unique
-  razonSocial  String
+  id              String        @id @default(uuid())
+  ruc             String        @unique
+  razonSocial     String
   nombreComercial String?
-  direccion    String?
-  telefono     String?
-  email        String?
-  contacto     String?
-  activo       Boolean       @default(true)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  direccion       String?
+  telefono        String?
+  email           String?
+  contacto        String?
+  activo          Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
-  ordenes      OrdenCompra[]
-  lotes        Lote[]
+  ordenes         OrdenCompra[]
+  lotes           Lote[]
 
   @@map("proveedores")
 }
@@ -234,7 +248,7 @@ enum EstadoOrdenCompra {
 
 model OrdenCompra {
   id            String              @id @default(uuid())
-  numero        String              @unique // OC-2026-00001
+  numero        String              @unique
   fecha         DateTime            @default(now())
   fechaRecepcion DateTime?
   estado        EstadoOrdenCompra   @default(PENDIENTE)
@@ -269,4 +283,24 @@ model DetalleOrdenCompra {
   subtotal       Decimal     @db.Decimal(12, 2)
 
   @@map("detalles_orden_compra")
+}
+
+// ============================================================
+//  AUDITORIA
+// ============================================================
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  usuarioId   String?
+  usuario     Usuario? @relation(fields: [usuarioId], references: [id])
+  accion      String   // CREATE, UPDATE, DELETE, LOGIN, etc
+  entidad     String   // Medicamento, Entrega, etc
+  entidadId   String?
+  detalles    Json?
+  ip          String?
+  createdAt   DateTime @default(now())
+
+  @@index([entidad, entidadId])
+  @@index([createdAt])
+  @@map("audit_logs")
 }

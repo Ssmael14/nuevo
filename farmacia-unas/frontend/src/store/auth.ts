@@ -1,11 +1,14 @@
 import { create } from 'zustand';
-import type { Usuario } from '@/types';
+import type { Usuario, RolUsuario } from '@/types';
 
 interface AuthState {
-  token: string | null;
+  accessToken: string | null;
+  refreshToken: string | null;
   user: Usuario | null;
-  setSession: (token: string, user: Usuario) => void;
+  setSession: (accessToken: string, refreshToken: string, user: Usuario) => void;
+  setTokens: (accessToken: string, refreshToken: string) => void;
   logout: () => void;
+  hasRole: (...roles: RolUsuario[]) => boolean;
 }
 
 function loadUser(): Usuario | null {
@@ -18,17 +21,29 @@ function loadUser(): Usuario | null {
   }
 }
 
-export const useAuth = create<AuthState>((set) => ({
-  token: localStorage.getItem('token'),
+export const useAuth = create<AuthState>((set, get) => ({
+  accessToken: localStorage.getItem('accessToken'),
+  refreshToken: localStorage.getItem('refreshToken'),
   user: loadUser(),
-  setSession: (token, user) => {
-    localStorage.setItem('token', token);
+  setSession: (accessToken, refreshToken, user) => {
+    localStorage.setItem('accessToken', accessToken);
+    localStorage.setItem('refreshToken', refreshToken);
     localStorage.setItem('user', JSON.stringify(user));
-    set({ token, user });
+    set({ accessToken, refreshToken, user });
+  },
+  setTokens: (accessToken, refreshToken) => {
+    localStorage.setItem('accessToken', accessToken);
+    localStorage.setItem('refreshToken', refreshToken);
+    set({ accessToken, refreshToken });
   },
   logout: () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
-    set({ token: null, user: null });
+    set({ accessToken: null, refreshToken: null, user: null });
+  },
+  hasRole: (...roles) => {
+    const u = get().user;
+    return !!u && roles.includes(u.rol);
   },
 }));

@@ -1,16 +1,17 @@
 import { createApp } from './app.js';
 import { env } from './config/env.js';
 import { prisma } from './config/db.js';
+import { logger } from './config/logger.js';
 
 const app = createApp();
 
 const server = app.listen(env.port, () => {
-  console.log(`[backend] API escuchando en http://localhost:${env.port}`);
-  console.log(`[backend] Entorno: ${env.nodeEnv}`);
+  logger.info(`API escuchando en http://localhost:${env.port} (${env.nodeEnv})`);
+  logger.info(`Docs: http://localhost:${env.port}/api/docs`);
 });
 
 async function shutdown(signal: string) {
-  console.log(`\n[backend] Recibido ${signal}, cerrando...`);
+  logger.info(`Recibido ${signal}, cerrando...`);
   server.close(async () => {
     await prisma.$disconnect();
     process.exit(0);

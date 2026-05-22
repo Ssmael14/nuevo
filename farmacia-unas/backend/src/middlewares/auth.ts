@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { RolUsuario } from '@prisma/client';
-import { verifyToken, JwtPayload } from '../utils/jwt.js';
+import { ZodSchema } from 'zod';
+import { verifyAccessToken, JwtPayload } from '../utils/jwt.js';
 import { HttpError } from './errorHandler.js';
 
 declare global {
@@ -19,7 +20,7 @@ export function authenticate(req: Request, _res: Response, next: NextFunction) {
   }
   const token = header.slice('Bearer '.length).trim();
   try {
-    req.user = verifyToken(token);
+    req.user = verifyAccessToken(token);
     next();
   } catch {
     throw new HttpError(401, 'Token invalido o expirado');
@@ -36,14 +37,15 @@ export function requireRole(...roles: RolUsuario[]) {
   };
 }
 
-export function validate(schema: { parse: (data: unknown) => unknown }) {
+export function validate(schema: ZodSchema) {
   return (req: Request, _res: Response, next: NextFunction) => {
     const parsed = schema.parse({ body: req.body, params: req.params, query: req.query }) as {
-      body?: unknown;
-      params?: unknown;
-      query?: unknown;
+      body?: Record<string, unknown>;
+      params?: Record<string, unknown>;
+      query?: Record<string, unknown>;
     };
     if (parsed.body) req.body = parsed.body;
+    if (parsed.query) req.query = parsed.query as Request['query'];
     next();
   };
 }

@@ -11,12 +11,18 @@ export type FormaFarmaceutica =
   | 'SUPOSITORIO'
   | 'OTRO';
 
+export type TipoPaciente = 'ALUMNO' | 'DOCENTE' | 'ADMINISTRATIVO';
+
+export type EstadoEntrega = 'ENTREGADA' | 'ANULADA';
+
 export interface Usuario {
   id: string;
   nombres: string;
   apellidos: string;
   email: string;
   rol: RolUsuario;
+  activo?: boolean;
+  createdAt?: string;
 }
 
 export interface Categoria {
@@ -43,6 +49,83 @@ export interface Medicamento {
   stockTotal?: number;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface Paciente {
+  id: string;
+  codigo: string;
+  dni?: string | null;
+  nombres: string;
+  apellidos: string;
+  tipo: TipoPaciente;
+  facultad?: string | null;
+  escuela?: string | null;
+  telefono?: string | null;
+  email?: string | null;
+  fechaNacimiento?: string | null;
+  activo: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Proveedor {
+  id: string;
+  ruc: string;
+  razonSocial: string;
+  nombreComercial?: string | null;
+  direccion?: string | null;
+  telefono?: string | null;
+  email?: string | null;
+  contacto?: string | null;
+  activo: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Lote {
+  id: string;
+  numeroLote: string;
+  medicamentoId: string;
+  medicamento?: { id: string; codigo: string; nombre: string };
+  cantidadInicial: number;
+  cantidadActual: number;
+  fechaIngreso: string;
+  fechaVencimiento: string;
+  precioUnitario?: string | null;
+  proveedorId?: string | null;
+  proveedor?: { id: string; razonSocial: string } | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DetalleEntrega {
+  id: string;
+  cantidad: number;
+  indicaciones?: string | null;
+  medicamento: { id: string; codigo: string; nombre: string };
+  lote: { id: string; numeroLote: string; fechaVencimiento: string };
+}
+
+export interface Entrega {
+  id: string;
+  numero: string;
+  fecha: string;
+  estado: EstadoEntrega;
+  diagnostico?: string | null;
+  numeroReceta?: string | null;
+  observaciones?: string | null;
+  paciente: Pick<Paciente, 'id' | 'codigo' | 'nombres' | 'apellidos' | 'tipo'>;
+  usuario: { id: string; nombres: string; apellidos: string };
+  detalles: DetalleEntrega[];
+}
+
+export interface DashboardStats {
+  totalMedicamentos: number;
+  totalPacientes: number;
+  entregasHoy: number;
+  entregasMes: number;
+  lotesPorVencer: number;
+  medicamentosStockBajo: number;
 }
 
 export interface Paginated<T> {

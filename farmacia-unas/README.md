@@ -5,117 +5,185 @@ La farmacia **no vende** medicamentos: los **entrega** a alumnos, docentes y per
 
 ## Stack
 
-- **Backend:** Node.js + Express + TypeScript + Prisma ORM
-- **Frontend:** React + Vite + TypeScript + TailwindCSS
+- **Backend:** Node.js 20 + Express 4 + TypeScript + Prisma 5
+- **Frontend:** React 18 + Vite 5 + TypeScript + TailwindCSS + Radix UI (estilo shadcn/ui)
 - **Base de datos:** PostgreSQL 16
-- **Orquestación:** Docker + Docker Compose
+- **Orquestación:** Docker Compose con healthchecks
+- **Logging:** Pino (estructurado)
+- **Auth:** JWT con access + refresh tokens (rotación)
+- **Validación:** Zod (backend + frontend con react-hook-form)
+- **Notificaciones:** Sonner (toasts)
+- **Gráficos:** Recharts
+- **Animaciones:** Framer Motion
+- **Docs API:** Swagger UI en `/api/docs`
+- **Tests:** Vitest + Supertest
+- **CI:** GitHub Actions
 
-## Módulos
+## Módulos implementados
 
-1. **Usuarios y roles** — Admin, Farmacéutico, Almacenero, Auxiliar
-2. **Pacientes** — Alumnos, docentes y administrativos
-3. **Medicamentos** — Catálogo con categorías y presentaciones
-4. **Inventario por lotes** — Control de stock y fechas de vencimiento
-5. **Entregas** — Dispensación de medicamentos (no ventas)
-6. **Proveedores y órdenes de compra**
-7. **Reportes** — Stock crítico, vencimientos, entregas por período
+| Módulo | Estado | Notas |
+|---|---|---|
+| Autenticación | ✅ | JWT access + refresh, rate limit en login, cambio de contraseña |
+| Usuarios y roles | ✅ | ADMIN, FARMACEUTICO, ALMACENERO, AUXILIAR |
+| Pacientes | ✅ | Alumnos, docentes, administrativos. Búsqueda + filtros |
+| Categorías | ✅ | CRUD con bloqueo si están en uso |
+| Medicamentos | ✅ | Catálogo con stock total, búsqueda, paginación |
+| Inventario por lotes | ✅ | Ingreso de lotes con vencimiento, alertas por colores |
+| Entregas | ✅ | Con descuento FEFO (primero los que vencen antes), anulación con reversa |
+| Proveedores | ✅ | CRUD completo |
+| Reportes | ✅ | Dashboard con gráficos, stock crítico, por vencer, top medicamentos |
+| Auditoría | ✅ | Tabla `audit_logs` |
 
 ## Estructura
 
 ```
 farmacia-unas/
-├── docker-compose.yml      # Orquestación de los 3 servicios
-├── .env.example            # Variables de entorno de ejemplo
-├── backend/                # API REST (Express + Prisma)
+├── docker-compose.yml          # 3 servicios con healthchecks
+├── .env.example
+├── package.json                # husky + lint-staged + prettier (raíz)
+├── .github/workflows/ci.yml    # Pipeline (lint + tests + docker build)
+├── backend/
 │   ├── src/
-│   ├── prisma/schema.prisma
-│   └── Dockerfile
-├── frontend/               # SPA (React + Vite)
-│   ├── src/
-│   └── Dockerfile
-└── db/init/                # Scripts SQL de inicialización opcionales
+│   │   ├── app.ts, index.ts
+│   │   ├── config/             # env, db, logger, openapi
+│   │   ├── middlewares/        # auth, errorHandler, rateLimit
+│   │   ├── modules/
+│   │   │   ├── auth/           # login, refresh, logout, change-password
+│   │   │   ├── usuarios/
+│   │   │   ├── pacientes/
+│   │   │   ├── categorias/
+│   │   │   ├── medicamentos/
+│   │   │   ├── inventario/     # lotes, stock-critico, por-vencer
+│   │   │   ├── entregas/       # FEFO + anular
+│   │   │   ├── proveedores/
+│   │   │   └── reportes/       # dashboard, charts data
+│   │   ├── routes/index.ts
+│   │   └── utils/              # jwt, password, audit
+│   ├── prisma/
+│   │   ├── schema.prisma
+│   │   └── seed.ts
+│   ├── vitest.config.ts
+│   └── Dockerfile (multi-stage)
+└── frontend/
+    ├── src/
+    │   ├── App.tsx, main.tsx
+    │   ├── api/                # axios calls por módulo
+    │   ├── components/
+    │   │   ├── ui/             # button, input, dialog, table, select, badge, skeleton, dropdown, confirm
+    │   │   ├── Sidebar.tsx     # colapsable + tooltips
+    │   │   ├── Topbar.tsx      # breadcrumbs + tema + menú usuario
+    │   │   ├── NProgressBar.tsx
+    │   │   └── ErrorBoundary.tsx
+    │   ├── hooks/useDebounce.ts
+    │   ├── layouts/AppLayout.tsx
+    │   ├── lib/                # api, utils (cn, formatDate)
+    │   ├── pages/              # todas las páginas
+    │   ├── store/              # auth, theme, ui (zustand)
+    │   ├── styles/             # CSS con tokens HSL y dark mode
+    │   └── types/
+    └── Dockerfile (multi-stage con nginx en prod)
 ```
 
 ## Arranque rápido
 
 ```bash
-# 1. Clonar y entrar al proyecto
 cd farmacia-unas
-
-# 2. Copiar variables de entorno
 cp .env.example .env
 
-# 3. Levantar todos los servicios
 docker compose up -d --build
-
-# 4. Aplicar migraciones de la base de datos
 docker compose exec backend npx prisma migrate dev --name init
-
-# 5. Cargar datos iniciales (usuario admin + categorías)
 docker compose exec backend npm run prisma:seed
 ```
 
-Servicios disponibles:
+| Servicio   | URL                              |
+|------------|----------------------------------|
+| Frontend   | http://localhost:5173            |
+| Backend    | http://localhost:4000            |
+| API docs   | http://localhost:4000/api/docs   |
+| Health     | http://localhost:4000/api/health |
+| Postgres   | localhost:5432                   |
 
-| Servicio  | URL                       |
-|-----------|---------------------------|
-| Frontend  | http://localhost:5173     |
-| Backend   | http://localhost:4000     |
-| API health| http://localhost:4000/api/health |
-| Postgres  | localhost:5432            |
-
-**Credenciales iniciales:** `admin@unas.edu.pe` / `admin123` (cambiar en producción).
+**Credenciales iniciales:** `admin@unas.edu.pe` / `admin123`
 
 ## Comandos útiles
 
 ```bash
-# Ver logs
+# Backend
+docker compose exec backend npm test                # tests
+docker compose exec backend npm run prisma:studio   # GUI de la BD
+docker compose exec backend npx prisma migrate dev  # nueva migración
+
+# Frontend
+docker compose exec frontend npm run lint           # typecheck
+
+# Logs
 docker compose logs -f backend
 docker compose logs -f frontend
 
-# Reiniciar un servicio
-docker compose restart backend
-
-# Acceder a la base de datos
-docker compose exec db psql -U farmacia -d farmacia_unas
-
-# Prisma Studio (GUI de la BD)
-docker compose exec backend npx prisma studio
-
-# Detener todo
-docker compose down
-
-# Detener y borrar volúmenes (¡borra la BD!)
+# Reset total (borra BD)
 docker compose down -v
 ```
 
-## Endpoints disponibles
+## Endpoints principales
 
-| Método | Ruta                       | Auth        | Descripción                       |
-|--------|----------------------------|-------------|-----------------------------------|
-| GET    | `/api/health`              | público     | Estado de la API y BD             |
-| POST   | `/api/auth/login`          | público     | Iniciar sesión, devuelve JWT      |
-| GET    | `/api/auth/me`             | autenticado | Perfil del usuario actual         |
-| GET    | `/api/categorias`          | autenticado | Listar categorías                 |
-| POST   | `/api/categorias`          | ADMIN/FARM. | Crear categoría                   |
-| PUT    | `/api/categorias/:id`      | ADMIN/FARM. | Actualizar                        |
-| DELETE | `/api/categorias/:id`      | ADMIN       | Eliminar                          |
-| GET    | `/api/medicamentos`        | autenticado | Listar (paginado, búsqueda)       |
-| POST   | `/api/medicamentos`        | ADMIN/FARM. | Crear medicamento                 |
-| PUT    | `/api/medicamentos/:id`    | ADMIN/FARM. | Actualizar                        |
-| DELETE | `/api/medicamentos/:id`    | ADMIN       | Eliminar (soft si tiene lotes)    |
+```
+POST   /api/auth/login              · Login (rate limit: 10/15min)
+POST   /api/auth/refresh            · Rotar tokens
+POST   /api/auth/logout             · Revocar refresh token
+GET    /api/auth/me                 · Perfil
+POST   /api/auth/change-password    · Cambio de contraseña
 
-## Roadmap
+GET    /api/usuarios                · ADMIN
+POST   /api/usuarios                · ADMIN
 
-- [x] Estructura inicial del proyecto con Docker
-- [x] Esquema de base de datos (Prisma)
-- [x] Health check de API
-- [x] Autenticación JWT (login + middleware de roles)
-- [x] CRUD de categorías
-- [x] CRUD de medicamentos (con paginación, búsqueda y stock total)
-- [x] Frontend con login, layout protegido y dashboard
-- [ ] Gestión de inventario por lotes (ingresos, vencimientos)
-- [ ] CRUD de pacientes
-- [ ] Registro de entregas con descuento de stock
-- [ ] CRUD de proveedores y órdenes de compra
-- [ ] Reportes y dashboard avanzado
+GET    /api/pacientes?q=&tipo=
+GET    /api/medicamentos?q=&page=&pageSize=
+GET    /api/categorias
+GET    /api/proveedores
+
+GET    /api/inventario/lotes
+POST   /api/inventario/lotes
+GET    /api/inventario/stock-critico
+GET    /api/inventario/por-vencer?dias=90
+
+GET    /api/entregas
+POST   /api/entregas                · FEFO automático
+GET    /api/entregas/:id
+POST   /api/entregas/:id/anular
+
+GET    /api/reportes/dashboard
+GET    /api/reportes/entregas-por-dia?dias=30
+GET    /api/reportes/entregas-por-tipo?dias=30
+GET    /api/reportes/top-medicamentos?limit=10&dias=90
+GET    /api/reportes/stock-por-categoria
+```
+
+## Seguridad
+
+- Helmet (cabeceras seguras)
+- CORS con origen configurable
+- Rate limiting global + específico en login
+- JWT con secretos separados para access/refresh
+- Refresh tokens almacenados en BD y revocables
+- Roles aplicados por endpoint (`requireRole(...)`)
+- Auditoría de acciones sensibles
+- Validación Zod en todos los inputs
+
+## Desarrollo
+
+```bash
+# En la raíz del workspace
+npm install   # instala husky + lint-staged + prettier
+npm run prepare
+
+# Hooks pre-commit corren prettier sobre archivos modificados
+```
+
+## Roadmap futuro
+
+- [ ] Órdenes de compra con recepción que genera lotes automáticamente
+- [ ] Importación masiva de pacientes desde CSV
+- [ ] Exportar reportes a Excel/PDF
+- [ ] Notificaciones (email/in-app) de stock bajo y vencimientos
+- [ ] Logo institucional UNAS en sidebar/login
+- [ ] PWA / instalación móvil

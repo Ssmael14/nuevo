@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { ZodError } from 'zod';
+import { logger } from '../config/logger.js';
 
 export class HttpError extends Error {
   constructor(public status: number, message: string, public details?: unknown) {
@@ -28,7 +29,7 @@ export function errorHandler(
     });
   }
 
-  console.error('[error]', err);
+  logger.error({ err }, 'Error no controlado');
   return res.status(500).json({ error: 'Error interno del servidor' });
 }
 

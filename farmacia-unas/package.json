@@ -1,0 +1,23 @@
+{
+  "name": "farmacia-unas-workspace",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Sistema de administracion de farmacia UNAS (workspace raiz para herramientas de desarrollo)",
+  "scripts": {
+    "prepare": "husky || true",
+    "format": "prettier --write \"backend/src/**/*.{ts,tsx}\" \"frontend/src/**/*.{ts,tsx}\""
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^15.2.10",
+    "prettier": "^3.3.3"
+  },
+  "lint-staged": {
+    "backend/src/**/*.ts": [
+      "prettier --write"
+    ],
+    "frontend/src/**/*.{ts,tsx}": [
+      "prettier --write"
+    ]
+  }
+}
