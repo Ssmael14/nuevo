@@ -89,15 +89,33 @@ docker compose down
 docker compose down -v
 ```
 
+## Endpoints disponibles
+
+| Método | Ruta                       | Auth        | Descripción                       |
+|--------|----------------------------|-------------|-----------------------------------|
+| GET    | `/api/health`              | público     | Estado de la API y BD             |
+| POST   | `/api/auth/login`          | público     | Iniciar sesión, devuelve JWT      |
+| GET    | `/api/auth/me`             | autenticado | Perfil del usuario actual         |
+| GET    | `/api/categorias`          | autenticado | Listar categorías                 |
+| POST   | `/api/categorias`          | ADMIN/FARM. | Crear categoría                   |
+| PUT    | `/api/categorias/:id`      | ADMIN/FARM. | Actualizar                        |
+| DELETE | `/api/categorias/:id`      | ADMIN       | Eliminar                          |
+| GET    | `/api/medicamentos`        | autenticado | Listar (paginado, búsqueda)       |
+| POST   | `/api/medicamentos`        | ADMIN/FARM. | Crear medicamento                 |
+| PUT    | `/api/medicamentos/:id`    | ADMIN/FARM. | Actualizar                        |
+| DELETE | `/api/medicamentos/:id`    | ADMIN       | Eliminar (soft si tiene lotes)    |
+
 ## Roadmap
 
 - [x] Estructura inicial del proyecto con Docker
 - [x] Esquema de base de datos (Prisma)
 - [x] Health check de API
-- [ ] Autenticación JWT (login/registro)
-- [ ] CRUD de medicamentos y categorías
-- [ ] Gestión de inventario por lotes
+- [x] Autenticación JWT (login + middleware de roles)
+- [x] CRUD de categorías
+- [x] CRUD de medicamentos (con paginación, búsqueda y stock total)
+- [x] Frontend con login, layout protegido y dashboard
+- [ ] Gestión de inventario por lotes (ingresos, vencimientos)
 - [ ] CRUD de pacientes
 - [ ] Registro de entregas con descuento de stock
 - [ ] CRUD de proveedores y órdenes de compra
-- [ ] Reportes y dashboard
+- [ ] Reportes y dashboard avanzado

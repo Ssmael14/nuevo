@@ -1,5 +1,8 @@
 import { Router } from 'express';
 import { prisma } from '../config/db.js';
+import { authRouter } from '../modules/auth/auth.routes.js';
+import { categoriasRouter } from '../modules/categorias/categorias.routes.js';
+import { medicamentosRouter } from '../modules/medicamentos/medicamentos.routes.js';
 
 export const router = Router();
 
@@ -12,12 +15,6 @@ router.get('/health', async (_req, res) => {
   }
 });
 
-// Modulos (placeholders, se iran completando)
-// router.use('/auth', authRouter);
-// router.use('/usuarios', usuariosRouter);
-// router.use('/pacientes', pacientesRouter);
-// router.use('/medicamentos', medicamentosRouter);
-// router.use('/inventario', inventarioRouter);
-// router.use('/entregas', entregasRouter);
-// router.use('/proveedores', proveedoresRouter);
-// router.use('/reportes', reportesRouter);
+router.use('/auth', authRouter);
+router.use('/categorias', categoriasRouter);
+router.use('/medicamentos', medicamentosRouter);
