@@ -67,6 +67,10 @@ export async function getById(id: string) {
 export async function create(data: CreateMedicamentoInput) {
   const exists = await prisma.medicamento.findUnique({ where: { codigo: data.codigo } });
   if (exists) throw new HttpError(409, 'Ya existe un medicamento con ese codigo');
+  if (data.codigoBarras) {
+    const dup = await prisma.medicamento.findUnique({ where: { codigoBarras: data.codigoBarras } });
+    if (dup) throw new HttpError(409, 'Ya existe un medicamento con ese codigo de barras');
+  }
   return prisma.medicamento.create({ data });
 }
 
@@ -78,7 +82,26 @@ export async function update(id: string, data: UpdateMedicamentoInput) {
     });
     if (otro) throw new HttpError(409, 'Ya existe otro medicamento con ese codigo');
   }
+  if (data.codigoBarras) {
+    const otro = await prisma.medicamento.findFirst({
+      where: { codigoBarras: data.codigoBarras, NOT: { id } },
+    });
+    if (otro) throw new HttpError(409, 'Ya existe otro medicamento con ese codigo de barras');
+  }
   return prisma.medicamento.update({ where: { id }, data });
+}
+
+export async function getByCodigoBarras(codigo: string) {
+  const med = await prisma.medicamento.findUnique({
+    where: { codigoBarras: codigo },
+    include: {
+      categoria: { select: { id: true, nombre: true } },
+      lotes: { select: { cantidadActual: true } },
+    },
+  });
+  if (!med) throw new HttpError(404, 'Medicamento no encontrado con ese codigo de barras');
+  const { lotes, ...rest } = med;
+  return { ...rest, stockTotal: lotes.reduce((a, l) => a + l.cantidadActual, 0) };
 }
 
 export async function remove(id: string) {

@@ -40,6 +40,21 @@ async function main() {
   }
   console.log(`[seed] Categorias creadas: ${categorias.length}`);
 
+  await prisma.configuracion.upsert({
+    where: { id: 'default' },
+    update: {},
+    create: {
+      id: 'default',
+      nombreInstitucion: 'Universidad Nacional Agraria de la Selva',
+      nombreFarmacia: 'Farmacia UNAS',
+      direccion: 'Av. Universitaria s/n, Tingo Maria, Peru',
+      rucInstitucion: '20171018901',
+      mostrarDemoLogin: true,
+      diasAlertaVencimiento: 90,
+    },
+  });
+  console.log('[seed] Configuracion inicializada');
+
   console.log('[seed] Completado.');
 }
 

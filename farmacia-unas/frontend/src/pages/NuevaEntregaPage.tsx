@@ -5,7 +5,8 @@ import { Plus, Trash2, Save, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { createEntrega } from '@/api/entregas';
 import { listPacientes } from '@/api/pacientes';
-import { listMedicamentos } from '@/api/medicamentos';
+import { getMedicamentoByCodigoBarras, listMedicamentos } from '@/api/medicamentos';
+import { BarcodeScanner } from '@/components/BarcodeScanner';
 import { Button } from '@/components/ui/button';
 import { Input, Textarea } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,7 +20,7 @@ import {
 } from '@/components/ui/table';
 import { useDebounce } from '@/hooks/useDebounce';
 import { toastApiError } from '@/lib/api';
-import type { Paciente } from '@/types';
+import type { Medicamento, Paciente } from '@/types';
 
 interface Item {
   medicamentoId: string;
@@ -63,13 +64,23 @@ export function NuevaEntregaPage() {
     onError: (err) => toastApiError(err, 'No se pudo registrar la entrega'),
   });
 
-  function addItem(medId: string) {
-    if (items.some((i) => i.medicamentoId === medId)) {
-      toast.info('Ese medicamento ya esta en la lista');
+  function agregarMedicamento(med: Medicamento) {
+    const existente = items.findIndex((i) => i.medicamentoId === med.id);
+    if (existente >= 0) {
+      // Si ya esta, incrementa cantidad (util para scanner)
+      const it = items[existente];
+      if (it.cantidad + 1 > it.stockDisponible) {
+        toast.error(`Stock insuficiente para "${med.nombre}"`);
+        return;
+      }
+      setItems(items.map((x, i) => (i === existente ? { ...x, cantidad: x.cantidad + 1 } : x)));
+      toast.success(`+1 ${med.nombre}`);
       return;
     }
-    const med = medsData?.items.find((m) => m.id === medId);
-    if (!med) return;
+    if ((med.stockTotal ?? 0) === 0) {
+      toast.error(`"${med.nombre}" sin stock`);
+      return;
+    }
     setItems([
       ...items,
       {
@@ -82,6 +93,21 @@ export function NuevaEntregaPage() {
       },
     ]);
     setMedQ('');
+  }
+
+  function addItem(medId: string) {
+    const med = medsData?.items.find((m) => m.id === medId);
+    if (!med) return;
+    agregarMedicamento(med);
+  }
+
+  async function handleBarcodeScan(codigo: string) {
+    try {
+      const med = await getMedicamentoByCodigoBarras(codigo);
+      agregarMedicamento(med);
+    } catch (err) {
+      toastApiError(err, `No se encontro medicamento con codigo "${codigo}"`);
+    }
   }
 
   function updateItem(idx: number, partial: Partial<Item>) {
@@ -202,11 +228,24 @@ export function NuevaEntregaPage() {
             <CardTitle className="text-base">Medicamentos</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="rounded-lg border border-primary-200 dark:border-primary-900/50 bg-primary-50/50 dark:bg-primary-900/10 p-3 space-y-2">
+              <p className="text-xs font-semibold text-primary-800 dark:text-primary-300 uppercase tracking-wide">
+                Agregar por codigo de barras
+              </p>
+              <BarcodeScanner onScan={handleBarcodeScan} />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className="flex-1 h-px bg-border" />
+              <span className="text-xs text-muted-foreground uppercase tracking-wide">o busqueda manual</span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+
             <div className="flex gap-2">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar medicamento para agregar..."
+                  placeholder="Buscar medicamento por nombre o codigo..."
                   value={medQ}
                   onChange={(e) => setMedQ(e.target.value)}
                   className="pl-9"

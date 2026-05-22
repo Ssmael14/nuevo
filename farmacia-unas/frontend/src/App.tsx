@@ -13,6 +13,7 @@ import { NuevaEntregaPage } from '@/pages/NuevaEntregaPage';
 import { EntregaDetailPage } from '@/pages/EntregaDetailPage';
 import { ReportesPage } from '@/pages/ReportesPage';
 import { UsuariosPage } from '@/pages/UsuariosPage';
+import { ConfiguracionPage } from '@/pages/ConfiguracionPage';
 import { PerfilPage } from '@/pages/PerfilPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { AppLayout } from '@/layouts/AppLayout';
@@ -53,6 +54,7 @@ export function App() {
                 <Route path="/perfil" element={<PerfilPage />} />
                 <Route element={<ProtectedRoute roles={['ADMIN']} />}>
                   <Route path="/usuarios" element={<UsuariosPage />} />
+                  <Route path="/configuracion" element={<ConfiguracionPage />} />
                 </Route>
               </Route>
             </Route>

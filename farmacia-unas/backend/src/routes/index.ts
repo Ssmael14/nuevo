@@ -9,6 +9,7 @@ import { proveedoresRouter } from '../modules/proveedores/proveedores.routes.js'
 import { inventarioRouter } from '../modules/inventario/inventario.routes.js';
 import { entregasRouter } from '../modules/entregas/entregas.routes.js';
 import { reportesRouter } from '../modules/reportes/reportes.routes.js';
+import { configuracionRouter } from '../modules/configuracion/configuracion.routes.js';
 
 export const router = Router();
 
@@ -40,3 +41,4 @@ router.use('/proveedores', proveedoresRouter);
 router.use('/inventario', inventarioRouter);
 router.use('/entregas', entregasRouter);
 router.use('/reportes', reportesRouter);
+router.use('/configuracion', configuracionRouter);

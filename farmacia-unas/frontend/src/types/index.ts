@@ -36,6 +36,7 @@ export interface Categoria {
 export interface Medicamento {
   id: string;
   codigo: string;
+  codigoBarras?: string | null;
   nombre: string;
   principioActivo?: string | null;
   concentracion?: string | null;
@@ -126,6 +127,29 @@ export interface DashboardStats {
   entregasMes: number;
   lotesPorVencer: number;
   medicamentosStockBajo: number;
+}
+
+export interface Configuracion {
+  id: string;
+  nombreInstitucion: string;
+  nombreFarmacia: string;
+  direccion?: string | null;
+  telefono?: string | null;
+  email?: string | null;
+  rucInstitucion?: string | null;
+  mostrarDemoLogin: boolean;
+  permitirRegistroAuto: boolean;
+  diasAlertaVencimiento: number;
+  textoComprobante?: string | null;
+  logoUrl?: string | null;
+  updatedAt: string;
+}
+
+export interface PublicConfiguracion {
+  nombreInstitucion: string;
+  nombreFarmacia: string;
+  mostrarDemoLogin: boolean;
+  logoUrl?: string | null;
 }
 
 export interface Paginated<T> {

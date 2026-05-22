@@ -11,8 +11,9 @@ import {
   BarChart3,
   ChevronLeft,
   UserCog,
-  Cross,
+  Settings,
 } from 'lucide-react';
+import { Logo } from './Logo';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import { useUI } from '@/store/ui';
 import { useAuth } from '@/store/auth';
@@ -36,6 +37,7 @@ const navItems: NavItem[] = [
   { to: '/proveedores', label: 'Proveedores', icon: Truck },
   { to: '/reportes', label: 'Reportes', icon: BarChart3 },
   { to: '/usuarios', label: 'Usuarios', icon: UserCog, roles: ['ADMIN'] },
+  { to: '/configuracion', label: 'Configuracion', icon: Settings, roles: ['ADMIN'] },
 ];
 
 export function Sidebar() {
@@ -64,8 +66,8 @@ export function Sidebar() {
       >
         <div className="h-16 flex items-center justify-between px-4 border-b border-primary-800/50">
           <div className="flex items-center gap-2 overflow-hidden">
-            <div className="h-9 w-9 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
-              <Cross className="h-5 w-5" />
+            <div className="h-10 w-10 rounded-lg bg-white p-1 flex items-center justify-center shrink-0">
+              <Logo size={32} />
             </div>
             {!sidebarCollapsed && (
               <div className="overflow-hidden">

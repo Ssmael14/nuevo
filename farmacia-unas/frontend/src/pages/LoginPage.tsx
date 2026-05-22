@@ -1,15 +1,18 @@
 import { useForm } from 'react-hook-form';
+import { useQuery } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Cross, Loader2, Pill, ShieldCheck, Leaf } from 'lucide-react';
+import { Loader2, Pill, ShieldCheck, Leaf } from 'lucide-react';
 import { toast } from 'sonner';
 import { login } from '@/api/auth';
+import { getConfiguracionPublica } from '@/api/configuracion';
 import { useAuth } from '@/store/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Logo } from '@/components/Logo';
 import { toastApiError } from '@/lib/api';
 
 const schema = z.object({
@@ -23,13 +26,26 @@ export function LoginPage() {
   const navigate = useNavigate();
   const { accessToken, setSession } = useAuth();
 
+  const { data: config } = useQuery({
+    queryKey: ['configuracion-publica'],
+    queryFn: getConfiguracionPublica,
+    staleTime: 60_000,
+  });
+
+  const mostrarDemo = config?.mostrarDemoLogin ?? false;
+
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { email: 'admin@unas.edu.pe', password: 'admin123' },
+    defaultValues: mostrarDemo
+      ? { email: 'admin@unas.edu.pe', password: 'admin123' }
+      : { email: '', password: '' },
+    values: mostrarDemo
+      ? { email: 'admin@unas.edu.pe', password: 'admin123' }
+      : undefined,
   });
 
   if (accessToken) return <Navigate to="/" replace />;
@@ -47,24 +63,29 @@ export function LoginPage() {
     }
   }
 
+  const institucion = config?.nombreInstitucion ?? 'Universidad Nacional Agraria de la Selva';
+  const farmacia = config?.nombreFarmacia ?? 'Farmacia UNAS';
+
   return (
     <div className="min-h-screen grid lg:grid-cols-2">
-      {/* Panel decorativo (institucional) */}
       <div className="hidden lg:flex relative bg-gradient-to-br from-primary-700 via-primary-800 to-primary-950 text-white p-12 flex-col justify-between overflow-hidden">
-        <div className="absolute inset-0 opacity-10" style={{
-          backgroundImage:
-            'radial-gradient(circle at 20% 20%, white 1px, transparent 1px), radial-gradient(circle at 80% 60%, white 1px, transparent 1px)',
-          backgroundSize: '60px 60px',
-        }} />
+        <div
+          className="absolute inset-0 opacity-10"
+          style={{
+            backgroundImage:
+              'radial-gradient(circle at 20% 20%, white 1px, transparent 1px), radial-gradient(circle at 80% 60%, white 1px, transparent 1px)',
+            backgroundSize: '60px 60px',
+          }}
+        />
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           className="relative"
         >
-          <div className="flex items-center gap-3 mb-12">
-            <div className="h-14 w-14 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center">
-              <Cross className="h-7 w-7" />
+          <div className="flex items-center gap-4 mb-12">
+            <div className="h-16 w-16 rounded-2xl bg-white p-2 shadow-lg">
+              <Logo size={48} />
             </div>
             <div>
               <p className="text-xs uppercase tracking-widest text-primary-200 font-semibold">UNAS</p>
@@ -76,8 +97,8 @@ export function LoginPage() {
             Atencion farmaceutica al servicio de la comunidad universitaria.
           </h1>
           <p className="mt-4 text-primary-100/80 max-w-md leading-relaxed">
-            Universidad Nacional Agraria de la Selva. Sistema integral para la gestion del
-            inventario y entrega de medicamentos a alumnos, docentes y personal administrativo.
+            {institucion}. Sistema integral para la gestion del inventario y entrega de
+            medicamentos a alumnos, docentes y personal administrativo.
           </p>
         </motion.div>
 
@@ -93,7 +114,6 @@ export function LoginPage() {
         </motion.div>
       </div>
 
-      {/* Formulario */}
       <div className="flex items-center justify-center p-6 lg:p-12 bg-background">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -102,12 +122,12 @@ export function LoginPage() {
           className="w-full max-w-sm"
         >
           <div className="lg:hidden flex items-center gap-3 mb-8">
-            <div className="h-12 w-12 rounded-xl bg-primary-600 text-white flex items-center justify-center">
-              <Cross className="h-6 w-6" />
+            <div className="h-14 w-14 rounded-xl bg-white p-1.5 shadow">
+              <Logo size={44} />
             </div>
             <div>
               <p className="text-xs uppercase tracking-widest text-primary-600 font-semibold">UNAS</p>
-              <p className="text-lg font-bold leading-tight">Farmacia</p>
+              <p className="text-lg font-bold leading-tight">{farmacia}</p>
             </div>
           </div>
 
@@ -132,16 +152,25 @@ export function LoginPage() {
             </Button>
           </form>
 
-          <p className="text-xs text-muted-foreground text-center mt-8">
-            Demo: <code className="font-mono">admin@unas.edu.pe</code> / <code className="font-mono">admin123</code>
-          </p>
+          {mostrarDemo && (
+            <p className="text-xs text-muted-foreground text-center mt-8">
+              Demo: <code className="font-mono">admin@unas.edu.pe</code> /{' '}
+              <code className="font-mono">admin123</code>
+            </p>
+          )}
         </motion.div>
       </div>
     </div>
   );
 }
 
-function Feature({ icon: Icon, label }: { icon: React.ComponentType<{ className?: string }>; label: string }) {
+function Feature({
+  icon: Icon,
+  label,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+}) {
   return (
     <div className="flex flex-col items-center gap-2 p-3 rounded-xl bg-white/5 backdrop-blur border border-white/10">
       <Icon className="h-5 w-5" />

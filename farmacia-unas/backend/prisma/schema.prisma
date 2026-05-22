@@ -112,6 +112,7 @@ enum FormaFarmaceutica {
 model Medicamento {
   id                String            @id @default(uuid())
   codigo            String            @unique
+  codigoBarras      String?           @unique
   nombre            String
   principioActivo   String?
   concentracion     String?
@@ -283,6 +284,28 @@ model DetalleOrdenCompra {
   subtotal       Decimal     @db.Decimal(12, 2)
 
   @@map("detalles_orden_compra")
+}
+
+// ============================================================
+//  CONFIGURACION (singleton: una sola fila id="default")
+// ============================================================
+
+model Configuracion {
+  id                  String   @id @default("default")
+  nombreInstitucion   String   @default("Universidad Nacional Agraria de la Selva")
+  nombreFarmacia      String   @default("Farmacia UNAS")
+  direccion           String?
+  telefono            String?
+  email               String?
+  rucInstitucion      String?
+  mostrarDemoLogin    Boolean  @default(true)
+  permitirRegistroAuto Boolean @default(false)
+  diasAlertaVencimiento Int    @default(90)
+  textoComprobante    String?
+  logoUrl             String?
+  updatedAt           DateTime @updatedAt
+
+  @@map("configuracion")
 }
 
 // ============================================================

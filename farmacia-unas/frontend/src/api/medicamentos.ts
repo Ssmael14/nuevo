@@ -18,6 +18,7 @@ export async function listMedicamentos(
 
 export interface CreateMedicamentoInput {
   codigo: string;
+  codigoBarras?: string | null;
   nombre: string;
   principioActivo?: string;
   concentracion?: string;
@@ -43,4 +44,9 @@ export async function updateMedicamento(
 
 export async function deleteMedicamento(id: string) {
   await api.delete(`/medicamentos/${id}`);
+}
+
+export async function getMedicamentoByCodigoBarras(codigo: string) {
+  const { data } = await api.get<Medicamento>(`/medicamentos/by-codigo-barras/${encodeURIComponent(codigo)}`);
+  return data;
 }

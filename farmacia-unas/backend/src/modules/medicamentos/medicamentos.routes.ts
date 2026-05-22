@@ -17,6 +17,10 @@ medicamentosRouter.get('/', async (req, res) => {
   res.json(await service.list(parsed.query));
 });
 
+medicamentosRouter.get('/by-codigo-barras/:codigo', async (req, res) => {
+  res.json(await service.getByCodigoBarras(req.params.codigo));
+});
+
 medicamentosRouter.get('/:id', async (req, res) => {
   res.json(await service.getById(req.params.id));
 });

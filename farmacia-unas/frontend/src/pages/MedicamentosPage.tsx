@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Pencil, Pill, Plus, Search, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Pencil, Pill, Plus, Search, Trash2, ChevronLeft, ChevronRight, ScanLine } from 'lucide-react';
 import { toast } from 'sonner';
 import { listCategorias } from '@/api/categorias';
 import {
@@ -40,6 +40,7 @@ const FORMAS: FormaFarmaceutica[] = [
 
 const schema = z.object({
   codigo: z.string().min(2).max(50),
+  codigoBarras: z.string().max(50).optional().or(z.literal('')),
   nombre: z.string().min(2).max(150),
   principioActivo: z.string().max(150).optional().or(z.literal('')),
   concentracion: z.string().max(50).optional().or(z.literal('')),
@@ -52,7 +53,7 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 const emptyForm: FormValues = {
-  codigo: '', nombre: '', principioActivo: '', concentracion: '',
+  codigo: '', codigoBarras: '', nombre: '', principioActivo: '', concentracion: '',
   formaFarmaceutica: 'TABLETA', presentacion: '', requiereReceta: false,
   stockMinimo: 10, categoriaId: '',
 };
@@ -118,6 +119,7 @@ export function MedicamentosPage() {
     setEditing(m);
     form.reset({
       codigo: m.codigo,
+      codigoBarras: m.codigoBarras ?? '',
       nombre: m.nombre,
       principioActivo: m.principioActivo ?? '',
       concentracion: m.concentracion ?? '',
@@ -139,11 +141,12 @@ export function MedicamentosPage() {
     const payload = {
       ...values,
       categoriaId: values.categoriaId || null,
+      codigoBarras: values.codigoBarras || null,
       principioActivo: values.principioActivo || undefined,
       concentracion: values.concentracion || undefined,
       presentacion: values.presentacion || undefined,
     };
-    if (editing) updateMut.mutate({ id: editing.id, input: values });
+    if (editing) updateMut.mutate({ id: editing.id, input: payload });
     else createMut.mutate(payload);
   }
 
@@ -213,7 +216,12 @@ export function MedicamentosPage() {
                     const bajo = stock < m.stockMinimo;
                     return (
                       <TableRow key={m.id}>
-                        <TableCell className="font-mono text-xs">{m.codigo}</TableCell>
+                        <TableCell className="font-mono text-xs">
+                          <div className="flex items-center gap-1.5">
+                            {m.codigo}
+                            {m.codigoBarras && <ScanLine className="h-3 w-3 text-primary-600" />}
+                          </div>
+                        </TableCell>
                         <TableCell>
                           <p className="font-medium">{m.nombre}</p>
                           {m.principioActivo && (
@@ -307,6 +315,18 @@ export function MedicamentosPage() {
             <FormField label="Nombre *" error={form.formState.errors.nombre?.message}>
               <Input {...form.register('nombre')} />
             </FormField>
+            <div className="col-span-2">
+              <FormField label="Codigo de barras (EAN/UPC)" error={form.formState.errors.codigoBarras?.message}>
+                <div className="relative">
+                  <ScanLine className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary-600" />
+                  <Input
+                    {...form.register('codigoBarras')}
+                    className="pl-9 font-mono"
+                    placeholder="Escanea o ingresa el codigo de barras del envase"
+                  />
+                </div>
+              </FormField>
+            </div>
             <FormField label="Principio activo">
               <Input {...form.register('principioActivo')} />
             </FormField>

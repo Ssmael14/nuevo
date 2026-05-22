@@ -15,6 +15,7 @@ const formaFarmaceutica = z.enum([
 export const createMedicamentoSchema = z.object({
   body: z.object({
     codigo: z.string().min(2).max(50),
+    codigoBarras: z.string().max(50).optional().nullable(),
     nombre: z.string().min(2).max(150),
     principioActivo: z.string().max(150).optional(),
     concentracion: z.string().max(50).optional(),
@@ -29,6 +30,7 @@ export const createMedicamentoSchema = z.object({
 export const updateMedicamentoSchema = z.object({
   body: z.object({
     codigo: z.string().min(2).max(50).optional(),
+    codigoBarras: z.string().max(50).optional().nullable(),
     nombre: z.string().min(2).max(150).optional(),
     principioActivo: z.string().max(150).optional().nullable(),
     concentracion: z.string().max(50).optional().nullable(),
